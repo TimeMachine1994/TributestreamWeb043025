@@ -3,11 +3,13 @@ import type { PageServerLoad, Actions } from './$types';
 import { createLogger } from '$lib/logger';
 import { guardFamilyRoute } from '$lib/routeGuards';
 import { packages } from '$lib/packages';
+import { getCalculatorData, updateCheckoutStatus } from '$lib/state/calculatorState.svelte';
+import { completeCheckout } from '$lib/state/checkout.svelte';
 
 // Create a dedicated logger for the checkout page
 const logger = createLogger('CheckoutPageServer');
 
-export const load: PageServerLoad = async ({ cookies, fetch, parent, locals }) => {
+export const load: PageServerLoad = async ({ url, cookies, fetch, parent, locals }) => {
   logger.info('🔍 Loading checkout page data');
   
   // Get authentication status and user data from layout data
@@ -25,22 +27,27 @@ export const load: PageServerLoad = async ({ cookies, fetch, parent, locals }) =
   // Get the JWT token from cookies
   const token = cookies.get('jwt');
   
-  // Get calculator data from cookie
-  const calculatorDataCookie = cookies.get('calculatorData');
-  if (!calculatorDataCookie) {
-    logger.warning('⚠️ No calculator data found, redirecting to calculator page');
+  // Get session ID from URL
+  const sessionId = url.searchParams.get('session');
+  if (!sessionId) {
+    logger.warning('⚠️ No session ID found, redirecting to calculator page');
     throw redirect(302, '/calculator');
   }
   
   try {
-    // Parse calculator data
-    const calculatorData = JSON.parse(calculatorDataCookie);
-    logger.info('✅ Successfully loaded calculator data', { calculatorData });
+    // Get calculator data from state
+    const calculatorData = getCalculatorData(sessionId);
+    if (!calculatorData) {
+      logger.warning('⚠️ No calculator data found for session', { sessionId });
+      throw redirect(302, '/calculator');
+    }
+    
+    logger.info('✅ Successfully loaded calculator data', { sessionId });
     
     // Find the selected package
-    const selectedPackage = packages.find(pkg => pkg.id === calculatorData.packageId);
+    const selectedPackage = packages.find(pkg => pkg.id === calculatorData.selectedPackage);
     if (!selectedPackage) {
-      logger.warning('⚠️ Selected package not found', { packageId: calculatorData.packageId });
+      logger.warning('⚠️ Selected package not found', { package: calculatorData.selectedPackage });
       throw redirect(302, '/calculator');
     }
     
@@ -99,7 +106,7 @@ export const load: PageServerLoad = async ({ cookies, fetch, parent, locals }) =
 };
 
 export const actions: Actions = {
-  processPayment: async ({ request, cookies, locals, fetch }) => {
+  processPayment: async ({ url, request, cookies, locals, fetch }) => {
     logger.info('💳 Processing payment submission');
     
     try {
@@ -113,6 +120,16 @@ export const actions: Actions = {
       const cardExpiry = formData.get('cardExpiry')?.toString() || '';
       const cardCvv = formData.get('cardCvv')?.toString() || '';
       const tributeId = formData.get('tributeId')?.toString() || '';
+      
+      // Get session ID from URL
+      const sessionId = url.searchParams.get('session');
+      if (!sessionId) {
+        logger.warning('⚠️ No session ID found');
+        return {
+          success: false,
+          error: 'No session ID found'
+        };
+      }
       
       // Validate required fields
       if (!billingFirstName) {
@@ -157,17 +174,15 @@ export const actions: Actions = {
         };
       }
       
-      // Get calculator data from cookie
-      const calculatorDataCookie = cookies.get('calculatorData');
-      if (!calculatorDataCookie) {
-        logger.warning('⚠️ No calculator data found');
+      // Get calculator data from state
+      const calculatorData = getCalculatorData(sessionId);
+      if (!calculatorData) {
+        logger.warning('⚠️ No calculator data found for session', { sessionId });
         return {
           success: false,
           error: 'No calculator data found'
         };
       }
-      
-      const calculatorData = JSON.parse(calculatorDataCookie);
       
       // Get JWT token
       const token = cookies.get('jwt');
@@ -188,14 +203,13 @@ export const actions: Actions = {
         cardLast4: cardNumber.slice(-4),
         isPaymentComplete: true,
         // Include calculator data
-        packageId: calculatorData.packageId,
-        liveStreamDuration: calculatorData.liveStreamDuration,
-        liveStreamDate: calculatorData.liveStreamDate,
-        liveStreamStartTime: calculatorData.liveStreamStartTime,
-        funeralHomeName: calculatorData.funeralHomeName,
-        funeralDirectorName: calculatorData.funeralDirectorName,
+        packageId: calculatorData.selectedPackage,
+        liveStreamDuration: calculatorData.livestreamDuration,
+        liveStreamDate: calculatorData.livestreamDate,
+        liveStreamStartTime: calculatorData.livestreamTime,
+        funeralHomeName: calculatorData.livestreamAtFuneralHome ? calculatorData.livestreamLocation : '',
         locations: calculatorData.locations,
-        priceTotal: calculatorData.priceTotal
+        priceTotal: calculatorData.totalCost
       };
       
       logger.debug('🔄 Updating tribute with payment information', { tributeId });
@@ -215,8 +229,15 @@ export const actions: Actions = {
         const result = await response.json();
         logger.success('✅ Payment processed successfully', { tributeId });
         
-        // Clear calculator data cookie
-        cookies.delete('calculatorData', { path: '/' });
+        // Update checkout status to completed
+        updateCheckoutStatus(sessionId, 'completed');
+        
+        // Complete checkout in the checkout state
+        completeCheckout(sessionId, {
+          billingName: `${billingFirstName} ${billingLastName}`,
+          billingAddress,
+          cardLast4: cardNumber.slice(-4)
+        });
         
         return {
           success: true,

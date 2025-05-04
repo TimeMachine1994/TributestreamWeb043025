@@ -1,13 +1,19 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { createLogger } from '$lib/logger';
   import { additionalCosts } from '$lib/packages';
+  import { getCalculatorData } from '$lib/state/calculatorState.svelte';
+  import { getCurrentCheckoutSession, isPaymentProcessing, getPaymentError, clearPaymentError } from '$lib/state/checkout.svelte';
   
   // Create a dedicated logger for the checkout page
   const logger = createLogger('CheckoutPage');
   
   // Get data from server
   let { data, form } = $props();
+  
+  // Get session ID from URL
+  const sessionId = $derived(page.url.searchParams.get('session'));
   
   // Reactive state
   let billingFirstName = $state('');
@@ -16,7 +22,6 @@
   let cardNumber = $state('');
   let cardExpiry = $state('');
   let cardCvv = $state('');
-  let isSubmitting = $state(false);
   let formErrors = $state<Record<string, string>>({});
   
   // Format currency
@@ -27,16 +32,25 @@
     }).format(amount);
   };
   
+  // Use payment processing state from checkout module
+  let isSubmitting = $derived(isPaymentProcessing());
+  let paymentError = $derived(getPaymentError());
+  
+  // Clear payment error when component is mounted
+  $effect(() => {
+    clearPaymentError();
+  });
+  
   // Calculate additional costs
   let extraHoursCost = $derived(
-    data.calculatorData.liveStreamDuration > 1 
-      ? (data.calculatorData.liveStreamDuration - 1) * additionalCosts.extraHour 
+    data.calculatorData.livestreamDuration > 1
+      ? (data.calculatorData.livestreamDuration - 1) * additionalCosts.extraHour
       : 0
   );
   
   let extraLocationsCost = $derived(
-    data.calculatorData.locations.length > 1 
-      ? (data.calculatorData.locations.length - 1) * additionalCosts.extraLocation 
+    data.calculatorData.locations.length > 1
+      ? (data.calculatorData.locations.length - 1) * additionalCosts.extraLocation
       : 0
   );
   
@@ -114,7 +128,15 @@
       }
     } else if (form?.error) {
       logger.error('❌ Payment processing failed', { error: form.error });
-      isSubmitting = false;
+    }
+  });
+  
+  // Log checkout session
+  $effect(() => {
+    if (sessionId) {
+      logger.info('🛒 Checkout session', { sessionId });
+    } else {
+      logger.warning('⚠️ No checkout session ID found');
     }
   });
 </script>
@@ -132,9 +154,9 @@
     </div>
   {/if}
   
-  {#if form?.error}
+  {#if form?.error || paymentError}
     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6" role="alert">
-      <p>{form.error}</p>
+      <p>{form?.error || paymentError}</p>
     </div>
   {/if}
   
@@ -159,9 +181,9 @@
         <div class="mb-6">
           <h3 class="text-lg font-medium mb-2">Additional Options</h3>
           
-          {#if data.calculatorData.liveStreamDuration > 1}
+          {#if data.calculatorData.livestreamDuration > 1}
             <div class="flex justify-between items-center mb-2">
-              <span>Extra Livestream Hours ({data.calculatorData.liveStreamDuration - 1})</span>
+              <span>Extra Livestream Hours ({data.calculatorData.livestreamDuration - 1})</span>
               <span>{formatCurrency(extraHoursCost)}</span>
             </div>
           {/if}
@@ -181,18 +203,18 @@
           <h3 class="text-lg font-medium mb-2">Event Details</h3>
           
           <div class="mb-2">
-            <span class="font-medium">Date:</span> 
-            <span>{formatDate(data.calculatorData.liveStreamDate)}</span>
+            <span class="font-medium">Date:</span>
+            <span>{formatDate(data.calculatorData.livestreamDate)}</span>
           </div>
           
           <div class="mb-2">
-            <span class="font-medium">Start Time:</span> 
-            <span>{data.calculatorData.liveStreamStartTime}</span>
+            <span class="font-medium">Start Time:</span>
+            <span>{data.calculatorData.livestreamTime}</span>
           </div>
           
           <div class="mb-2">
-            <span class="font-medium">Duration:</span> 
-            <span>{data.calculatorData.liveStreamDuration} hour{data.calculatorData.liveStreamDuration > 1 ? 's' : ''}</span>
+            <span class="font-medium">Duration:</span>
+            <span>{data.calculatorData.livestreamDuration} hour{data.calculatorData.livestreamDuration > 1 ? 's' : ''}</span>
           </div>
           
           {#if data.calculatorData.funeralHomeName}
@@ -232,7 +254,7 @@
         <!-- Total -->
         <div class="flex justify-between items-center text-xl font-bold">
           <span>Total</span>
-          <span>{formatCurrency(data.calculatorData.priceTotal)}</span>
+          <span>{formatCurrency(data.calculatorData.totalCost)}</span>
         </div>
       {:else}
         <p class="text-red-600">Package information not available. Please return to the calculator page.</p>
@@ -243,7 +265,7 @@
     <div class="bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-2xl font-semibold mb-4">Payment Information</h2>
       
-      <form method="POST" action="?/processPayment" on:submit|preventDefault={handleSubmit}>
+      <form method="POST" action="?/processPayment&session={sessionId}" on:submit|preventDefault={handleSubmit}>
         <!-- Hidden field for tribute ID -->
         <input type="hidden" name="tributeId" value={data.tributeData && 'id' in data.tributeData ? data.tributeData.id : ''}>
         
@@ -364,7 +386,7 @@
             {#if isSubmitting}
               Processing...
             {:else}
-              Complete Purchase - {formatCurrency(data.calculatorData.priceTotal)}
+              Complete Purchase - {formatCurrency(data.calculatorData.totalCost)}
             {/if}
           </button>
         </div>

@@ -1,20 +1,9 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
+  import { getUser, isAuthenticated, getUserRole, getUserRoleDisplay, logout, isFuneralDirector, isFamilyContact } from '$lib/state/auth.svelte';
 
-  // Define props with runes
-  let { authenticated = false, user = null } = $props<{
-    authenticated?: boolean,
-    user?: {
-      username?: string,
-      role?: {
-        name?: string,
-        type?: string
-      }
-    } | null
-  }>();
-  
-  // State for mobile menu and logout
+  // State for mobile menu
   let mobileMenuOpen = $state(false);
   let isLoggingOut = $state(false);
   
@@ -32,25 +21,13 @@
     isLoggingOut = true;
     
     try {
-      const response = await fetch('/api/login', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        console.log("✅ Logout successful");
-        // Close mobile menu if open
-        mobileMenuOpen = false;
-        // Redirect to home page with invalidation
-        goto('/', { invalidateAll: true });
-      } else {
-        console.error("❌ Logout failed");
-        isLoggingOut = false;
-      }
+      await logout();
+      console.log("✅ Logout successful");
+      // Close mobile menu if open
+      mobileMenuOpen = false;
     } catch (error) {
-      console.error("💥 Error during logout:", error);
+      console.error("❌ Logout failed:", error);
+    } finally {
       isLoggingOut = false;
     }
   }
@@ -65,22 +42,12 @@
     return page.url.pathname.startsWith(path);
   }
   
-  // Import the role display function and auth utilities
-  import { getRoleDisplayName, hasRole } from '$lib/auth';
-  
-  // Computed values for role-based UI
-  let userRoleName = $derived(user?.role?.name || '');
-  let userRoleType = $derived(user?.role?.type || '');
-  let userRoleDisplay = $derived(getRoleDisplayName(userRoleType));
-  let isFuneralDirector = $derived(userRoleType === 'funeral_director');
-  let isFamilyContact = $derived(userRoleType === 'family_contact');
-  
   // Handle My Portal button click
   function handleMyPortalClick() {
     console.log("🔑 My Portal button clicked");
-    if (authenticated) {
+    if (isAuthenticated()) {
       // Redirect to appropriate dashboard based on role
-      if (isFuneralDirector) {
+      if (isFuneralDirector()) {
         console.log("👨‍💼 Redirecting to funeral director dashboard");
         goto('/fd-dashboard');
       } else {
@@ -114,8 +81,8 @@
             Home
           </a>
           
-          {#if authenticated}
-            {#if isFuneralDirector}
+          {#if isAuthenticated()}
+            {#if isFuneralDirector()}
               <a
                 href="/fd-dashboard"
                 class="{isActive('/fd-dashboard') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
@@ -128,7 +95,7 @@
               >
                 Create Tribute
               </a>
-            {:else}
+            {:else if isFamilyContact()}
               <a
                 href="/family-dashboard"
                 class="{isActive('/family-dashboard') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
@@ -142,9 +109,9 @@
       
       <!-- Auth buttons -->
       <div class="hidden sm:ml-6 sm:flex sm:items-center">
-        {#if authenticated && user?.role}
+        {#if isAuthenticated() && getUser()?.role}
           <div class="mr-4 text-sm text-gray-600">
-            <span class="font-semibold">{userRoleDisplay}</span>
+            <span class="font-semibold">{getUserRoleDisplay()}</span>
           </div>
         {/if}
         
@@ -156,7 +123,7 @@
           My Portal
         </button>
         
-        {#if authenticated}
+        {#if isAuthenticated()}
           <button
             onclick={handleLogout}
             class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -215,8 +182,8 @@
           Home
         </a>
         
-        {#if authenticated}
-          {#if isFuneralDirector}
+        {#if isAuthenticated()}
+          {#if isFuneralDirector()}
             <a
               href="/fd-dashboard"
               class="{isActive('/fd-dashboard') ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'} block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
@@ -231,7 +198,7 @@
             >
               Create Tribute
             </a>
-          {:else}
+          {:else if isFamilyContact()}
             <a
               href="/family-dashboard"
               class="{isActive('/family-dashboard') ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'} block pl-3 pr-4 py-2 border-l-4 text-base font-medium"

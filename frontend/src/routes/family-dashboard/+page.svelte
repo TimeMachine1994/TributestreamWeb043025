@@ -6,66 +6,40 @@
   import { getRoleDisplayName } from '$lib/auth';
   import Navbar from '$lib/components/Navbar.svelte';
   
+  // Import API modules
+  import { fetchTributes, createTribute as createTributeAPI, getTributeById, getTributes, getLoading as getTributesLoading, getError as getTributesError } from '$lib/api/tributes.svelte';
+  import type { Tribute } from '$lib/api/tributes.svelte';
+  import { fetchLocations, getLocations, getLoading as getLocationsLoading, getError as getLocationsError } from '$lib/api/locations.svelte';
+  import { fetchMediaItems, getMediaItems, getLoading as getMediaLoading, getError as getMediaError } from '$lib/api/mediaItems.svelte';
+  import { getUser, isFuneralDirector, isFamilyContact, getUserRoleDisplay } from '$lib/state/auth.svelte';
+  import { getPendingCheckouts, getSavedCheckouts, resumeCheckout } from '$lib/state/checkout.svelte';
+  import type { CalculatorData } from '$lib/state/calculatorState.svelte';
+  
   // Create a dedicated logger for the family dashboard component
   const logger = createLogger('FamilyDashboardComponent');
   
-  // Define tribute type
-  // Define interfaces for data structures
-  interface Location {
-    id: number;
-    name: string;
-    address: string;
-    startTime: string;
-    duration: number;
-  }
-  
-  interface MediaItem {
-    id: number;
-    name: string;
-    url: string;
-    type: string; // image, video, document
-    thumbnailUrl?: string;
-  }
-  
-  interface TributeAttributes {
-    name: string;
-    slug: string;
-    packageId?: string;
-    liveStreamDate?: string;
-    liveStreamStartTime?: string;
-    liveStreamDuration?: number;
-    locations?: Location[];
-    mediaItems?: MediaItem[];
-    priceTotal?: number;
-    packageInfo?: any;
-    [key: string]: any;
-  }
-  
-  interface Tribute {
-    id: string;
-    attributes: TributeAttributes;
-    [key: string]: any;
-  }
-  
-  // Define data type from server load function
-  interface DashboardData {
+  // Get data from server load function
+  let { data } = $props<{ data: {
     authenticated?: boolean;
     tributes?: Tribute[];
     error?: string;
     meta?: any;
-  }
-  
-  // Get data from server load function
-  let { data } = $props<{ data: DashboardData & { user?: { role?: { type?: string, name?: string } } } }>();
+    user?: { role?: { type?: string, name?: string } }
+  } }>();
   
   // State for loading and data fetching
   let isLoading = $state(false);
   let loadingTributeId = $state<string | null>(null);
-  let loadingLocations = $state(false);
-  let loadingMedia = $state(false);
   let fetchError = $state('');
   
-  // Log when component initializes with data
+  // Local tributes state that we can modify
+  let tributes = $state<Tribute[]>([]);
+  
+  // Checkout data
+  let pendingCheckouts = $state<CalculatorData[]>([]);
+  let savedCheckouts = $state<CalculatorData[]>([]);
+  
+  // Initialize data from server
   $effect(() => {
     logger.info('🚀 Family dashboard component initialized');
     logger.debug('📦 Initial data received', {
@@ -75,20 +49,25 @@
       userRole: data.user?.role?.type || 'unknown'
     });
     
+    // Initialize tributes state from server data
+    if (data.tributes && data.tributes.length > 0) {
+      tributes = data.tributes;
+    }
+    
+    // Get JWT token from cookies
+    const token = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('jwt='))
+      ?.split('=')[1];
+    
     // If we have a featured tribute, load its details
-    if (featuredTribute) {
+    if (featuredTribute && token) {
       loadTributeDetails(featuredTribute.id);
     }
+    
+    // Load pending and saved checkouts
+    loadCheckouts();
   });
-  
-  // Check if user is a funeral director
-  let isFuneralDirector = $derived(data.user?.role?.type === 'funeral_director');
-  
-  // Check if user is a family contact
-  let isFamilyContact = $derived(data.user?.role?.type === 'family_contact');
-  
-  // Get user role display name
-  let userRoleDisplay = $derived(getRoleDisplayName(data.user?.role?.type));
   
   // State management with Svelte 5 runes
   let isEditing = $state<string | null>(null); // ID of tribute being edited
@@ -101,9 +80,8 @@
   let successMessage = $state('');
   
   // Computed values
-  let tributes = $derived<Tribute[]>(data.tributes || []);
-  let hasError = $derived(!!data.error || !!error);
-  let errorMessage = $derived(data.error || error || '');
+  let hasError = $derived(!!data.error || !!error || !!getTributesError() || !!getLocationsError() || !!getMediaError());
+  let errorMessage = $derived(data.error || error || getTributesError() || getLocationsError() || getMediaError() || '');
   
   // Validation
   let nameError = $state('');
@@ -367,15 +345,21 @@
     try {
       logger.info('🔄 Loading tribute details', { tributeId });
       
-      // Load locations
-      loadingLocations = true;
-      await loadTributeLocations(tributeId);
-      loadingLocations = false;
+      // Get JWT token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('jwt='))
+        ?.split('=')[1];
       
-      // Load media items
-      loadingMedia = true;
-      await loadTributeMedia(tributeId);
-      loadingMedia = false;
+      if (!token) {
+        throw new Error('Missing authentication token');
+      }
+      
+      // Load locations using the locations API module
+      await fetchLocations(tributeId, token);
+      
+      // Load media items using the mediaItems API module
+      await fetchMediaItems(tributeId, token);
       
       logger.success('✅ Tribute details loaded successfully', { tributeId });
     } catch (err) {
@@ -385,96 +369,6 @@
     } finally {
       isLoading = false;
       loadingTributeId = null;
-    }
-  }
-  
-  // Function to load tribute locations
-  async function loadTributeLocations(tributeId: string) {
-    logger.info('🔄 Loading tribute locations', { tributeId });
-    
-    try {
-      const response = await fetch(`/api/tributes/${tributeId}?populate=locations`, {
-        headers: {
-          'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('jwt='))?.split('=')[1] || ''}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to load locations (${response.status})`);
-      }
-      
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        // Update the tribute with locations data
-        tributes = tributes.map(tribute =>
-          tribute.id === tributeId
-            ? {
-                ...tribute,
-                attributes: {
-                  ...tribute.attributes,
-                  locations: result.data.attributes.locations || []
-                }
-              }
-            : tribute
-        );
-        
-        logger.success('✅ Locations loaded successfully', {
-          tributeId,
-          locationsCount: result.data.attributes.locations?.length || 0
-        });
-      } else {
-        throw new Error(result.error || 'Failed to load locations');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      logger.error('❌ Error loading locations', { tributeId, error: errorMessage });
-      throw new Error(`Failed to load locations: ${errorMessage}`);
-    }
-  }
-  
-  // Function to load tribute media
-  async function loadTributeMedia(tributeId: string) {
-    logger.info('🔄 Loading tribute media', { tributeId });
-    
-    try {
-      const response = await fetch(`/api/tributes/${tributeId}?populate=mediaItems`, {
-        headers: {
-          'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('jwt='))?.split('=')[1] || ''}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to load media (${response.status})`);
-      }
-      
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        // Update the tribute with media data
-        tributes = tributes.map(tribute =>
-          tribute.id === tributeId
-            ? {
-                ...tribute,
-                attributes: {
-                  ...tribute.attributes,
-                  mediaItems: result.data.attributes.mediaItems || []
-                }
-              }
-            : tribute
-        );
-        
-        logger.success('✅ Media loaded successfully', {
-          tributeId,
-          mediaCount: result.data.attributes.mediaItems?.length || 0
-        });
-      } else {
-        throw new Error(result.error || 'Failed to load media');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      logger.error('❌ Error loading media', { tributeId, error: errorMessage });
-      throw new Error(`Failed to load media: ${errorMessage}`);
     }
   }
   
@@ -586,11 +480,58 @@
   let scheduleData = $derived(featuredTribute ? getScheduleData(featuredTribute) : []);
   
   // Get media items for the featured tribute
-  let mediaItems = $derived(featuredTribute?.attributes?.mediaItems || []);
+  let displayMediaItems = $derived(getMediaItems() || []);
+  
+  /**
+   * Load pending and saved checkouts
+   */
+  function loadCheckouts() {
+    logger.info('🔄 Loading checkout data');
+    
+    try {
+      pendingCheckouts = getPendingCheckouts();
+      savedCheckouts = getSavedCheckouts();
+      
+      logger.debug('📊 Checkout data loaded', {
+        pendingCount: pendingCheckouts.length,
+        savedCount: savedCheckouts.length
+      });
+    } catch (err) {
+      logger.error('❌ Error loading checkout data', {
+        error: err instanceof Error ? err.message : String(err)
+      });
+    }
+  }
+  
+  /**
+   * Resume a checkout session
+   * @param checkoutId Checkout session ID
+   */
+  function handleResumeCheckout(checkoutId: string) {
+    logger.info('🔄 Resuming checkout', { checkoutId });
+    resumeCheckout(checkoutId);
+  }
+  
+  /**
+   * Format date for display
+   * @param timestamp Timestamp in milliseconds
+   */
+  function formatSavedDate(timestamp: number): string {
+    if (!timestamp) return 'Unknown date';
+    
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
 </script>
 
 <!-- Global Navigation -->
-<Navbar authenticated={data.authenticated} user={data.user} />
+<Navbar />
 
 <!-- Main Dashboard Content -->
 <div class="bg-gray-50 min-h-screen">
@@ -607,7 +548,7 @@
           </div>
           <div class="mt-4 md:mt-0">
             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-              Role: {userRoleDisplay}
+              Role: {getUserRoleDisplay()}
             </span>
           </div>
         </div>
@@ -746,7 +687,7 @@
           {/if}
         </div>
         
-        {#if loadingLocations}
+        {#if getLocationsLoading()}
           <div class="py-8 flex justify-center">
             <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -779,6 +720,106 @@
         {/if}
       </div>
     </div>
+    
+    <!-- Pending Checkouts -->
+    {#if pendingCheckouts.length > 0}
+      <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-900">Pending Checkouts</h2>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+              {pendingCheckouts.length} pending
+            </span>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                {#each pendingCheckouts as checkout}
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatSavedDate(checkout.savedAt)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{checkout.selectedPackage}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(checkout.totalCost)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        Checkout in progress
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <button
+                        onclick={() => handleResumeCheckout(checkout.id)}
+                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                      >
+                        Resume Checkout
+                      </button>
+                    </td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {/if}
+    
+    <!-- Saved Checkouts -->
+    {#if savedCheckouts.length > 0}
+      <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-900">Saved Livestreams</h2>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              {savedCheckouts.length} saved
+            </span>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                {#each savedCheckouts as checkout}
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatSavedDate(checkout.savedAt)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{checkout.selectedPackage}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(checkout.totalCost)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Saved for later
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <button
+                        onclick={() => handleResumeCheckout(checkout.id)}
+                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                      >
+                        Complete Checkout
+                      </button>
+                    </td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {/if}
     
     <!-- Tributes List -->
     {#if tributes.length > 0}
@@ -822,7 +863,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </button>
-                  {#if isFuneralDirector}
+                  {#if isFuneralDirector()}
                     <button onclick={() => confirmDelete(tribute)} class="inline-flex items-center p-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50">
                       <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -883,7 +924,7 @@
                 <div class="bg-gray-50 p-4 rounded-lg">
                   <h3 class="text-sm font-medium text-gray-500">Duration</h3>
                   <p class="mt-1 text-lg font-semibold text-gray-900">
-                    {featuredTribute.attributes.liveStreamDuration || 1} hour{featuredTribute.attributes.liveStreamDuration !== 1 ? 's' : ''}
+                    {featuredTribute.attributes.liveStreamDuration || 1} hour{Number(featuredTribute.attributes.liveStreamDuration) !== 1 ? 's' : ''}
                   </p>
                 </div>
                 
@@ -919,21 +960,21 @@
                   </button>
                 </div>
                 
-                {#if loadingMedia}
+                {#if getMediaLoading()}
                   <div class="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center">
                     <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   </div>
-                {:else if mediaItems.length > 0}
+                {:else if displayMediaItems.length > 0}
                   <!-- Display first media item as main preview -->
                   <div class="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden">
-                    {#if mediaItems[0].type === 'image'}
-                      <img src={mediaItems[0].url} alt={mediaItems[0].name} class="object-cover w-full h-full" />
-                    {:else if mediaItems[0].type === 'video'}
+                    {#if displayMediaItems[0].type === 'image'}
+                      <img src={displayMediaItems[0].url} alt={displayMediaItems[0].name} class="object-cover w-full h-full" />
+                    {:else if displayMediaItems[0].type === 'video'}
                       <div class="relative">
-                        <img src={mediaItems[0].thumbnailUrl || ''} alt={mediaItems[0].name} class="object-cover w-full h-full" />
+                        <img src={displayMediaItems[0].thumbnailUrl || ''} alt={displayMediaItems[0].name} class="object-cover w-full h-full" />
                         <div class="absolute inset-0 flex items-center justify-center">
                           <div class="bg-black bg-opacity-50 rounded-full p-3">
                             <svg class="h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -954,7 +995,7 @@
                   
                   <!-- Thumbnails for additional media -->
                   <div class="mt-3 grid grid-cols-3 gap-2">
-                    {#each mediaItems.slice(1, 4) as item, i}
+                    {#each displayMediaItems.slice(1, 4) as item, i}
                       <div class="bg-gray-200 rounded-md h-16 overflow-hidden">
                         {#if item.type === 'image'}
                           <img src={item.thumbnailUrl || item.url} alt={item.name} class="object-cover w-full h-full" />
@@ -977,7 +1018,7 @@
                       </div>
                     {/each}
                     
-                    {#if mediaItems.length === 1}
+                    {#if displayMediaItems.length === 1}
                       <!-- Placeholder thumbnails if only one media item -->
                       {#each Array(3) as _, i}
                         <div class="bg-gray-200 rounded-md h-16 flex items-center justify-center">
@@ -986,7 +1027,7 @@
                           </svg>
                         </div>
                       {/each}
-                    {:else if mediaItems.length === 2}
+                    {:else if displayMediaItems.length === 2}
                       <!-- Placeholder thumbnails if only two media items -->
                       {#each Array(2) as _, i}
                         <div class="bg-gray-200 rounded-md h-16 flex items-center justify-center">
@@ -995,7 +1036,7 @@
                           </svg>
                         </div>
                       {/each}
-                    {:else if mediaItems.length === 3}
+                    {:else if displayMediaItems.length === 3}
                       <!-- Placeholder thumbnail if only three media items -->
                       <div class="bg-gray-200 rounded-md h-16 flex items-center justify-center">
                         <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1035,10 +1076,10 @@
       <button
         class="bg-white shadow rounded-lg p-4 flex flex-col items-center justify-center hover:bg-blue-50 transition-colors"
         onclick={() => featuredTribute && uploadMedia(featuredTribute)}
-        disabled={!featuredTribute || loadingMedia}
+        disabled={!featuredTribute || getMediaLoading()}
       >
         <div class="bg-blue-100 p-3 rounded-full mb-3">
-          {#if loadingMedia}
+          {#if getMediaLoading()}
             <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -1055,10 +1096,10 @@
       <button
         class="bg-white shadow rounded-lg p-4 flex flex-col items-center justify-center hover:bg-blue-50 transition-colors"
         onclick={() => featuredTribute && editSchedule(featuredTribute)}
-        disabled={!featuredTribute || loadingLocations}
+        disabled={!featuredTribute || getLocationsLoading()}
       >
         <div class="bg-purple-100 p-3 rounded-full mb-3">
-          {#if loadingLocations}
+          {#if getLocationsLoading()}
             <svg class="animate-spin h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>

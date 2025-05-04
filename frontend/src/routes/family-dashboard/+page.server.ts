@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { createLogger } from '$lib/logger';
 import { guardFamilyRoute } from '$lib/routeGuards';
 import { packages } from '$lib/packages';
+import type { Tribute } from '$lib/api/tributes.svelte';
 
 // Create a dedicated logger for the family dashboard server
 const logger = createLogger('FamilyDashboardServer');
@@ -90,23 +91,7 @@ export const load: PageServerLoad = async ({ cookies, fetch, parent, locals }) =
       });
       
       // Transform data to match the expected structure in the component
-      // Define the type for tribute objects
-      interface ApiTribute {
-        id: number;
-        name: string;
-        slug: string;
-        createdAt: string;
-        updatedAt: string;
-        packageId?: string;
-        liveStreamDate?: string;
-        liveStreamStartTime?: string;
-        liveStreamDuration?: number;
-        locations?: any[];
-        priceTotal?: number;
-        [key: string]: any; // For any other properties
-      }
-      
-      const transformedTributes = (result.data || []).map((tribute: ApiTribute) => ({
+      const transformedTributes: Tribute[] = (result.data || []).map((tribute: any) => ({
         id: tribute.id,
         attributes: {
           name: tribute.name,
@@ -124,7 +109,7 @@ export const load: PageServerLoad = async ({ cookies, fetch, parent, locals }) =
       }));
       
       // Get package information for each tribute
-      const tributesWithPackages = transformedTributes.map((tribute: any) => {
+      const tributesWithPackages = transformedTributes.map((tribute: Tribute) => {
         const packageId = tribute.attributes.packageId;
         const packageInfo = packageId ? packages.find(pkg => pkg.id === packageId) : null;
         

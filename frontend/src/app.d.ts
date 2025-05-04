@@ -19,6 +19,16 @@ declare global {
 		// interface PageState {}
 		// interface Platform {}
 	}
+
+	// Svelte 5 Runes Type Definitions
+	interface Snippet<Args extends any[] = []> {
+		(...args: Args): any;
+	}
+
+	// Add global type definitions for runes
+	interface Window {
+		// Add any global window properties needed for runes
+	}
 }
 
 export {};

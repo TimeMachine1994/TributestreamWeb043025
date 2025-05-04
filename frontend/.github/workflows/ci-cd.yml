@@ -1,0 +1,238 @@
+name: TributeStream Frontend CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Run type check
+        run: npm run check
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results
+          path: |
+            playwright-report/
+            test-results/
+  
+  build:
+    name: Build
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    
+    strategy:
+      matrix:
+        environment: [dev, staging]
+        include:
+          - environment: dev
+            node-env: development
+          - environment: staging
+            node-env: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create environment file
+        run: |
+          echo "PUBLIC_API_URL=${{ secrets.API_URL_${{ matrix.environment }} }}" > .env.${{ matrix.node-env }}
+          echo "PUBLIC_SITE_URL=${{ secrets.SITE_URL_${{ matrix.environment }} }}" >> .env.${{ matrix.node-env }}
+          echo "PUBLIC_ENVIRONMENT=${{ matrix.node-env }}" >> .env.${{ matrix.node-env }}
+      
+      - name: Build application
+        run: |
+          cp .env.${{ matrix.node-env }} .env
+          npm run build
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-${{ matrix.environment }}
+          path: build/
+  
+  deploy-dev:
+    name: Deploy to Development
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-dev
+          path: build
+      
+      - name: Deploy to development server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DEV_SERVER_HOST }}
+          username: ${{ secrets.DEV_SERVER_USERNAME }}
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          source: "build/*"
+          target: "/var/www/tributestream-dev"
+          strip_components: 1
+      
+      - name: Restart development server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEV_SERVER_HOST }}
+          username: ${{ secrets.DEV_SERVER_USERNAME }}
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/tributestream-dev
+            pm2 restart tributestream-frontend
+  
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-staging
+          path: build
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Deploy to S3
+        run: |
+          aws s3 sync build/ s3://${{ secrets.S3_BUCKET_STAGING }} --delete
+      
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_STAGING }} --paths "/*"
+  
+  deploy-production:
+    name: Deploy to Production
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create environment file
+        run: |
+          echo "PUBLIC_API_URL=${{ secrets.API_URL_PROD }}" > .env.production
+          echo "PUBLIC_SITE_URL=${{ secrets.SITE_URL_PROD }}" >> .env.production
+          echo "PUBLIC_ENVIRONMENT=production" >> .env.production
+      
+      - name: Build application
+        run: |
+          cp .env.production .env
+          npm run build
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Deploy to S3
+        run: |
+          aws s3 sync build/ s3://${{ secrets.S3_BUCKET_PROD }} --delete
+      
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_PROD }} --paths "/*"
+
+  e2e-tests:
+    name: End-to-End Tests
+    needs: [deploy-dev, deploy-staging]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    
+    strategy:
+      matrix:
+        environment: [dev, staging]
+        include:
+          - environment: dev
+            base-url: ${{ secrets.SITE_URL_DEV }}
+          - environment: staging
+            base-url: ${{ secrets.SITE_URL_STAGING }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          BASE_URL: ${{ matrix.base-url }}
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.environment }}
+          path: playwright-report/

@@ -1,5 +1,5 @@
 <!--
-  BackendStatus Component
+  BackendStatus Component - Migrated to Svelte 5 Runes
   
   This component initializes the backend availability checker and displays
   a status message when the backend is unavailable. It also provides a
@@ -7,14 +7,15 @@
 -->
 <script>
   import { onMount } from 'svelte';
-  import { backendStatus, initBackendChecker, forceCheckBackendAvailability } from '$lib/backendChecker';
+  import { status, initBackendChecker, forceCheckBackendAvailability } from '$lib/state/backend.svelte';
   import config from '$lib/config';
   
-  // Local state
+  // Local state using runes
   let isRetrying = $state(false);
   
   // Initialize the backend checker on mount
   onMount(() => {
+    console.log('🔍 Initializing backend checker');
     if (config.features.enableBackendCheck) {
       initBackendChecker();
     }
@@ -22,19 +23,20 @@
   
   // Handle retry button click
   async function handleRetry() {
+    console.log('🔄 Retrying backend connection');
     isRetrying = true;
     await forceCheckBackendAvailability();
     isRetrying = false;
   }
 </script>
 
-{#if $backendStatus && !$backendStatus.available}
+{#if !status.available}
   <div class="backend-status-alert" role="alert">
     <div class="alert-content">
       <div class="alert-icon">⚠️</div>
       <div class="alert-message">
         <strong>Backend Connection Issue</strong>
-        <p>{$backendStatus.error || 'Cannot connect to the backend service'}</p>
+        <p>{status.error || 'Cannot connect to the backend service'}</p>
         <div class="alert-tips">
           <strong>Troubleshooting Tips:</strong>
           <ul>
@@ -47,11 +49,11 @@
       <button
         class="retry-button"
         onclick={handleRetry}
-        disabled={isRetrying || $backendStatus.retryScheduled}
+        disabled={isRetrying || status.retryScheduled}
       >
         {#if isRetrying}
           <span class="spinner"></span> Retrying...
-        {:else if $backendStatus.retryScheduled}
+        {:else if status.retryScheduled}
           Retrying soon...
         {:else}
           Retry Now
@@ -59,9 +61,9 @@
       </button>
     </div>
     
-    {#if $backendStatus.retryScheduled}
+    {#if status.retryScheduled}
       <div class="retry-info">
-        Automatic retry in progress (attempt {$backendStatus.retryCount}/{config.api.maxRetries})
+        Automatic retry in progress (attempt {status.retryCount}/{config.api.maxRetries})
       </div>
     {/if}
   </div>
