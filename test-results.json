@@ -1,0 +1,72 @@
+{
+  "user": {
+    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTgsImlhdCI6MTc0NjM1NTc2OCwiZXhwIjoxNzQ4OTQ3NzY4fQ.iwXYFdjrnyEL07f903rDw2vMI2z8KA_NyaK0Mb4_k6E",
+    "user": {
+      "id": 18,
+      "documentId": "nvom2do9f453ubc7rgf76mfp",
+      "username": "testuser6844_1746355768428",
+      "email": "testuser6844_1746355768428@example.com",
+      "provider": "local",
+      "confirmed": true,
+      "blocked": false,
+      "createdAt": "2025-05-04T10:49:28.652Z",
+      "updatedAt": "2025-05-04T10:49:28.652Z",
+      "publishedAt": "2025-05-04T10:49:28.653Z",
+      "fullName": "Test User 6844",
+      "phoneNumber": "555-123-6844"
+    }
+  },
+  "tribute": {
+    "id": 55,
+    "documentId": "j6j2hxx6o6clm012o0p4amfu",
+    "name": "Test Tribute 6844 - 1746355768428",
+    "slug": "test-tribute-6844-1746355768428",
+    "createdAt": "2025-05-04T10:49:28.745Z",
+    "updatedAt": "2025-05-04T10:49:28.827Z",
+    "publishedAt": "2025-05-04T10:49:28.837Z",
+    "description": "This is a test tribute created by the automated test script",
+    "status": "draft",
+    "owner": {
+      "id": 18,
+      "documentId": "nvom2do9f453ubc7rgf76mfp",
+      "username": "testuser6844_1746355768428",
+      "email": "testuser6844_1746355768428@example.com",
+      "provider": "local",
+      "confirmed": true,
+      "blocked": false,
+      "createdAt": "2025-05-04T10:49:28.652Z",
+      "updatedAt": "2025-05-04T10:49:28.652Z",
+      "publishedAt": "2025-05-04T10:49:28.653Z",
+      "fullName": "Test User 6844",
+      "phoneNumber": "555-123-6844"
+    }
+  },
+  "association": {
+    "data": {
+      "id": 55,
+      "documentId": "j6j2hxx6o6clm012o0p4amfu",
+      "name": "Test Tribute 6844 - 1746355768428",
+      "slug": "test-tribute-6844-1746355768428",
+      "createdAt": "2025-05-04T10:49:28.745Z",
+      "updatedAt": "2025-05-04T10:49:28.827Z",
+      "publishedAt": "2025-05-04T10:49:28.837Z",
+      "description": "This is a test tribute created by the automated test script",
+      "status": "draft",
+      "owner": {
+        "id": 18,
+        "documentId": "nvom2do9f453ubc7rgf76mfp",
+        "username": "testuser6844_1746355768428",
+        "email": "testuser6844_1746355768428@example.com",
+        "provider": "local",
+        "confirmed": true,
+        "blocked": false,
+        "createdAt": "2025-05-04T10:49:28.652Z",
+        "updatedAt": "2025-05-04T10:49:28.652Z",
+        "publishedAt": "2025-05-04T10:49:28.653Z",
+        "fullName": "Test User 6844",
+        "phoneNumber": "555-123-6844"
+      }
+    },
+    "meta": {}
+  }
+}
