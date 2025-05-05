@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "funeral_homes",
+  "info": {
+    "singularName": "funeral-home",
+    "pluralName": "funeral-homes",
+    "displayName": "Funeral Home",
+    "description": "Funeral homes that directors are associated with"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "minLength": 2
+    },
+    "address": {
+      "type": "string",
+      "required": true
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "zipCode": {
+      "type": "string"
+    },
+    "phoneNumber": {
+      "type": "string"
+    },
+    "directors": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "plugin::users-permissions.user",
+      "mappedBy": "funeralHome"
+    }
+  }
+}

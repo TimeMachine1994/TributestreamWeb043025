@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tributes",
+  "info": {
+    "singularName": "tribute",
+    "pluralName": "tributes",
+    "displayName": "Tribute",
+    "description": "Collection of tributes with auto-generated slugs"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "minLength": 2
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true,
+      "unique": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "draft"
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "tributes"
+    }
+  }
+}
