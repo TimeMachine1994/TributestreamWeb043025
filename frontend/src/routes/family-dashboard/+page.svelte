@@ -39,6 +39,11 @@
   let pendingCheckouts = $state<CalculatorData[]>([]);
   let savedCheckouts = $state<CalculatorData[]>([]);
   
+  // Contribution requests state
+  let contributionRequests = $state<any[]>([]);
+  let loadingContributionRequests = $state(false);
+  let contributionRequestsError = $state('');
+  
   // Initialize data from server
   $effect(() => {
     logger.info('🚀 Family dashboard component initialized');
@@ -67,6 +72,9 @@
     
     // Load pending and saved checkouts
     loadCheckouts();
+    
+    // Load contribution requests
+    loadContributionRequests();
   });
   
   // State management with Svelte 5 runes
@@ -504,6 +512,178 @@
   }
   
   /**
+   * Load contribution requests for tributes owned by the current user
+   */
+  async function loadContributionRequests() {
+    logger.info('🔄 Loading contribution requests');
+    loadingContributionRequests = true;
+    contributionRequestsError = '';
+    
+    try {
+      // Get JWT token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('jwt='))
+        ?.split('=')[1];
+      
+      if (!token) {
+        throw new Error('Missing authentication token');
+      }
+      
+      // Fetch contribution requests from API
+      const response = await fetch('/api/contribution-requests', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch contribution requests: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        contributionRequests = result.data || [];
+        logger.success('✅ Contribution requests loaded successfully', { count: contributionRequests.length });
+      } else {
+        throw new Error(result.error || 'Failed to load contribution requests');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.error('❌ Error loading contribution requests', { error: errorMessage });
+      contributionRequestsError = errorMessage;
+      contributionRequests = [];
+    } finally {
+      loadingContributionRequests = false;
+    }
+  }
+  
+  /**
+   * Handle contribution request approval
+   * @param requestId The ID of the request to approve
+   */
+  async function approveContributionRequest(requestId: string) {
+    logger.info('🔄 Approving contribution request', { requestId });
+    
+    try {
+      // Get JWT token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('jwt='))
+        ?.split('=')[1];
+      
+      if (!token) {
+        throw new Error('Missing authentication token');
+      }
+      
+      // Update the request status to approved
+      const response = await fetch(`/api/contribution-requests/${requestId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: 'approved',
+          responseDate: new Date().toISOString()
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to approve request: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        logger.success('✅ Contribution request approved successfully', { requestId });
+        successMessage = 'Contribution request approved successfully';
+        
+        // Update the local state
+        contributionRequests = contributionRequests.map(request =>
+          request.id === requestId
+            ? { ...request, attributes: { ...request.attributes, status: 'approved', responseDate: new Date().toISOString() } }
+            : request
+        );
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          successMessage = '';
+        }, 3000);
+      } else {
+        throw new Error(result.error || 'Failed to approve contribution request');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.error('❌ Error approving contribution request', { requestId, error: errorMessage });
+      error = `Failed to approve request: ${errorMessage}`;
+    }
+  }
+  
+  /**
+   * Handle contribution request rejection
+   * @param requestId The ID of the request to reject
+   */
+  async function rejectContributionRequest(requestId: string) {
+    logger.info('🔄 Rejecting contribution request', { requestId });
+    
+    try {
+      // Get JWT token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('jwt='))
+        ?.split('=')[1];
+      
+      if (!token) {
+        throw new Error('Missing authentication token');
+      }
+      
+      // Update the request status to rejected
+      const response = await fetch(`/api/contribution-requests/${requestId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: 'rejected',
+          responseDate: new Date().toISOString()
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to reject request: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        logger.success('✅ Contribution request rejected successfully', { requestId });
+        successMessage = 'Contribution request rejected successfully';
+        
+        // Update the local state
+        contributionRequests = contributionRequests.map(request =>
+          request.id === requestId
+            ? { ...request, attributes: { ...request.attributes, status: 'rejected', responseDate: new Date().toISOString() } }
+            : request
+        );
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          successMessage = '';
+        }, 3000);
+      } else {
+        throw new Error(result.error || 'Failed to reject contribution request');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.error('❌ Error rejecting contribution request', { requestId, error: errorMessage });
+      error = `Failed to reject request: ${errorMessage}`;
+    }
+  }
+  
+  /**
    * Resume a checkout session
    * @param checkoutId Checkout session ID
    */
@@ -817,6 +997,108 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+    {/if}
+    
+    <!-- Contribution Requests Section -->
+    {#if contributionRequests.length > 0}
+      <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-900">Contribution Requests</h2>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+              {contributionRequests.filter(r => r.attributes.status === 'pending').length} pending
+            </span>
+          </div>
+          
+          {#if loadingContributionRequests}
+            <div class="py-8 flex justify-center">
+              <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          {:else if contributionRequestsError}
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-red-700">❌ {contributionRequestsError}</p>
+                </div>
+              </div>
+            </div>
+          {:else}
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contributor</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tribute</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request Date</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  {#each contributionRequests as request}
+                    <tr>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {request.attributes.contributor?.username || 'Unknown User'}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {request.attributes.tribute?.attributes?.name || 'Unknown Tribute'}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(request.attributes.requestDate)}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        {#if request.attributes.status === 'pending'}
+                          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Pending
+                          </span>
+                        {:else if request.attributes.status === 'approved'}
+                          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Approved
+                          </span>
+                        {:else if request.attributes.status === 'rejected'}
+                          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Rejected
+                          </span>
+                        {/if}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {#if request.attributes.status === 'pending'}
+                          <div class="flex space-x-2">
+                            <button
+                              onclick={() => approveContributionRequest(request.id)}
+                              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onclick={() => rejectContributionRequest(request.id)}
+                              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        {:else}
+                          <span class="text-gray-500">
+                            {request.attributes.responseDate ? `Responded on ${formatDate(request.attributes.responseDate)}` : 'No response date'}
+                          </span>
+                        {/if}
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
         </div>
       </div>
     {/if}

@@ -144,6 +144,12 @@
               Login
             </a>
             <a
+              href="/family-registration"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              Family Registration
+            </a>
+            <a
               href="/funeral-director-registration"
               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
             >
@@ -242,6 +248,13 @@
             onclick={() => mobileMenuOpen = false}
           >
             Login
+          </a>
+          <a
+            href="/family-registration"
+            class="{isActive('/family-registration') ? 'bg-green-50 border-green-500 text-green-700' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'} block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+            onclick={() => mobileMenuOpen = false}
+          >
+            Family Registration
           </a>
           <a
             href="/funeral-director-registration"

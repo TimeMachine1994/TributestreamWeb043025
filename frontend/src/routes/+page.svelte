@@ -216,6 +216,7 @@
           {/if}
         {:else}
           <a href="/login" class="button primary cta">Get Started</a>
+          <a href="/family-registration" class="button secondary family-button">Family Registration</a>
           <a href="/funeral-director-registration" class="button secondary fd-button">Register as Funeral Director</a>
           <a href="/about" class="button tertiary">Learn More</a>
         {/if}
@@ -269,6 +270,7 @@
     {#if !data.authenticated}
       <div class="cta-buttons">
         <a href="/login" class="button primary cta">Create Your Account</a>
+        <a href="/family-registration" class="button secondary family-cta">Family Registration</a>
         <a href="/funeral-director-registration" class="button secondary cta">Funeral Director? Register Here</a>
       </div>
     {:else if data.user?.role?.type === 'funeral_director'}
@@ -544,6 +546,26 @@
   
   .fd-button:hover {
     background-color: #e1bee7;
+  }
+  
+  .family-button {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }
+  
+  .family-button:hover {
+    background-color: #c8e6c9;
+  }
+  
+  .family-cta {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }
+  
+  .family-cta:hover {
+    background-color: #c8e6c9;
   }
 
   .cta {
