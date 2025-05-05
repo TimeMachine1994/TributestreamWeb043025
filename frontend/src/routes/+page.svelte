@@ -216,7 +216,8 @@
           {/if}
         {:else}
           <a href="/login" class="button primary cta">Get Started</a>
-          <a href="/about" class="button secondary">Learn More</a>
+          <a href="/funeral-director-registration" class="button secondary fd-button">Register as Funeral Director</a>
+          <a href="/about" class="button tertiary">Learn More</a>
         {/if}
       </div>
     </div>
@@ -250,6 +251,13 @@
         <h3>Privacy Controls</h3>
         <p>Choose who can view and contribute to your family's tributes</p>
       </div>
+      
+      <div class="feature-card fd-feature">
+        <div class="feature-icon">⚰️</div>
+        <h3>For Funeral Directors</h3>
+        <p>Streamline your services with our dedicated funeral director tools</p>
+        <a href="/funeral-director-registration" class="feature-link">Register Now</a>
+      </div>
     </div>
   </section>
 
@@ -259,7 +267,10 @@
     <p>Join thousands of families preserving their precious memories</p>
     
     {#if !data.authenticated}
-      <a href="/login" class="button primary cta">Create Your Account</a>
+      <div class="cta-buttons">
+        <a href="/login" class="button primary cta">Create Your Account</a>
+        <a href="/funeral-director-registration" class="button secondary cta">Funeral Director? Register Here</a>
+      </div>
     {:else if data.user?.role?.type === 'funeral_director'}
       <a href="/createTribute" class="button primary cta">Start a New Tribute</a>
     {:else}
@@ -448,6 +459,37 @@
     margin-bottom: 30px;
     color: #555;
   }
+  
+  .cta-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+  }
+  
+  @media (min-width: 768px) {
+    .cta-buttons {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+  
+  .fd-feature {
+    border: 1px solid #e1bee7;
+    background-color: #faf5fb;
+  }
+  
+  .feature-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: #9c27b0;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .feature-link:hover {
+    text-decoration: underline;
+  }
 
   /* Buttons */
   .button {
@@ -482,6 +524,26 @@
   
   .secondary:hover {
     background-color: #eaeaea;
+  }
+  
+  .tertiary {
+    background-color: transparent;
+    color: #555;
+    border: 1px solid #ddd;
+  }
+  
+  .tertiary:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .fd-button {
+    background-color: #f3e5f5;
+    color: #9c27b0;
+    border: 1px solid #e1bee7;
+  }
+  
+  .fd-button:hover {
+    background-color: #e1bee7;
   }
 
   .cta {

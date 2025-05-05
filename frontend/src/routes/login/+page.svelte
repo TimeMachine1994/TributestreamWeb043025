@@ -155,6 +155,18 @@
       <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Logging in...' : 'Login'}
       </button>
+      
+      <div class="registration-options">
+        <p>Don't have an account?</p>
+        <div class="registration-buttons">
+          <a href="/register" class="register-button family">
+            Register as Family Member
+          </a>
+          <a href="/funeral-director-registration" class="register-button funeral-director">
+            Register as Funeral Director
+          </a>
+        </div>
+      </div>
     </form>
   {/if}
 </div>
@@ -307,5 +319,58 @@
     margin-top: 8px;
     font-size: 0.9rem;
     color: #666;
+  }
+  /* Registration options */
+  .registration-options {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    text-align: center;
+  }
+  
+  .registration-options p {
+    margin-bottom: 10px;
+    color: #666;
+  }
+  
+  .registration-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .register-button {
+    padding: 10px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .register-button.family {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+  }
+  
+  .register-button.family:hover {
+    background-color: #bbdefb;
+  }
+  
+  .register-button.funeral-director {
+    background-color: #f3e5f5;
+    color: #9c27b0;
+    border: 1px solid #e1bee7;
+  }
+  
+  .register-button.funeral-director:hover {
+    background-color: #e1bee7;
+  }
+  
+  @media (min-width: 480px) {
+    .registration-buttons {
+      flex-direction: row;
+      justify-content: center;
+    }
   }
 </style>

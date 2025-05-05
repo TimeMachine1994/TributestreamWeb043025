@@ -136,12 +136,20 @@
             {/if}
           </button>
         {:else}
-          <a
-            href="/login"
-            class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Login
-          </a>
+          <div class="ml-3 flex space-x-2">
+            <a
+              href="/login"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Login
+            </a>
+            <a
+              href="/funeral-director-registration"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            >
+              Register as Funeral Director
+            </a>
+          </div>
         {/if}
       </div>
       
@@ -234,6 +242,13 @@
             onclick={() => mobileMenuOpen = false}
           >
             Login
+          </a>
+          <a
+            href="/funeral-director-registration"
+            class="{isActive('/funeral-director-registration') ? 'bg-purple-50 border-purple-500 text-purple-700' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'} block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+            onclick={() => mobileMenuOpen = false}
+          >
+            Register as Funeral Director
           </a>
         {/if}
       </div>
