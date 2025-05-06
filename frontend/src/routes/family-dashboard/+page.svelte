@@ -27,6 +27,20 @@
     user?: { role?: { type?: string, name?: string } }
   } }>();
   
+  // Import auth functions for logout
+  import { logout } from '$lib/state/auth.svelte';
+  
+  // Handle logout function
+  async function handleLogout() {
+    logger.info("🚪 User logging out due to expired token");
+    try {
+      await logout();
+      logger.success("✅ Logout successful");
+    } catch (error) {
+      logger.error("❌ Logout failed:", error);
+    }
+  }
+  
   // State for loading and data fetching
   let isLoading = $state(false);
   let loadingTributeId = $state<string | null>(null);
@@ -65,16 +79,28 @@
       .find(row => row.startsWith('jwt='))
       ?.split('=')[1];
     
-    // If we have a featured tribute, load its details
-    if (featuredTribute && token) {
-      loadTributeDetails(featuredTribute.id);
+    // Initialize dashboard data only if we have a valid token
+    if (token) {
+      // If we have a featured tribute, load its details
+      if (featuredTribute) {
+        loadTributeDetails(featuredTribute.id);
+      }
+      
+      // Load pending and saved checkouts
+      loadCheckouts();
+      
+      // Load contribution requests - but only if we have a proper auth token
+      try {
+        loadContributionRequests();
+      } catch (e) {
+        logger.warning('Failed to load contribution requests during initialization', {
+          error: e instanceof Error ? e.message : String(e)
+        });
+        // Don't let this error interrupt the dashboard loading
+      }
+    } else {
+      logger.warning('Skipping data loading due to missing auth token');
     }
-    
-    // Load pending and saved checkouts
-    loadCheckouts();
-    
-    // Load contribution requests
-    loadContributionRequests();
   });
   
   // State management with Svelte 5 runes
@@ -527,27 +553,51 @@
         ?.split('=')[1];
       
       if (!token) {
-        throw new Error('Missing authentication token');
+        logger.warning('⚠️ No authentication token found for contribution requests');
+        contributionRequestsError = 'Authentication required';
+        contributionRequests = [];
+        loadingContributionRequests = false;
+        return;
       }
       
-      // Fetch contribution requests from API
-      const response = await fetch('/api/contribution-requests', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // Fetch contribution requests from API with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      try {
+        const response = await fetch('/api/contribution-requests', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            logger.warning('⚠️ Authentication issue with contribution requests', { status: response.status });
+            contributionRequestsError = 'Not authorized to view contribution requests';
+            contributionRequests = [];
+            return;
+          }
+          
+          throw new Error(`Failed to fetch contribution requests: ${response.status}`);
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch contribution requests: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        contributionRequests = result.data || [];
-        logger.success('✅ Contribution requests loaded successfully', { count: contributionRequests.length });
-      } else {
-        throw new Error(result.error || 'Failed to load contribution requests');
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          contributionRequests = result.data || [];
+          logger.success('✅ Contribution requests loaded successfully', { count: contributionRequests.length });
+        } else {
+          throw new Error(result.error || 'Failed to load contribution requests');
+        }
+      } catch (fetchErr) {
+        if (fetchErr.name === 'AbortError') {
+          throw new Error('Request timeout: Contribution requests fetch took too long');
+        }
+        throw fetchErr;
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -805,18 +855,47 @@
     
     <!-- Notifications -->
     {#if hasError}
-      <div class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <p class="text-sm text-red-700">❌ {errorMessage}</p>
+      <!-- Special handling for token expiration errors -->
+      {#if errorMessage.includes('Invalid or expired token') || errorMessage.includes('Authentication failed')}
+        <div class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">Your session has expired</h3>
+                <p class="text-sm text-red-700 mt-1">
+                  Your login token has expired. Please log out and sign back in to continue.
+                </p>
+              </div>
+            </div>
+            <div class="mt-4 sm:mt-0">
+              <button
+                onclick={handleLogout}
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Log Out
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      {:else}
+        <div class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-red-700">❌ {errorMessage}</p>
+            </div>
+          </div>
+        </div>
+      {/if}
     {/if}
     
     {#if successMessage}

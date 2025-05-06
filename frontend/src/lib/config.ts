@@ -56,18 +56,38 @@ export interface AppConfig {
  * 3. Default to production
  */
 function detectEnvironment(): Environment {
+  // TEMPORARY FIX: Hardcode to production environment
+  // This bypasses the environment variable detection which is not working
+  logger.debug('Using hardcoded production environment');
+  return 'production';
+  
+  /* Original code commented out for reference
   // Check for environment variable
   const envFromVar = import.meta.env.PUBLIC_ENVIRONMENT;
   
+  // Log all environment variables for debugging
+  logger.debug('Environment variables:', {
+    PUBLIC_ENVIRONMENT: import.meta.env.PUBLIC_ENVIRONMENT,
+    PUBLIC_STRAPI_URL: import.meta.env.PUBLIC_STRAPI_URL,
+    PUBLIC_STRAPI_PORT: import.meta.env.PUBLIC_STRAPI_PORT,
+    dev: dev
+  });
+  
   if (envFromVar) {
     if (['development', 'staging', 'production'].includes(envFromVar)) {
+      logger.debug(`Using environment from variable: ${envFromVar}`);
       return envFromVar as Environment;
     }
     logger.warning(`Invalid environment value: ${envFromVar}, falling back to detection`);
+  } else {
+    logger.warning('PUBLIC_ENVIRONMENT variable not found, falling back to detection');
   }
   
   // Use development mode detection
-  return dev ? 'development' : 'production';
+  const detectedEnv = dev ? 'development' : 'production';
+  logger.debug(`Detected environment based on dev flag: ${detectedEnv}`);
+  return detectedEnv;
+  */
 }
 
 /**
@@ -119,7 +139,7 @@ const configs: Record<Environment, AppConfig> = {
     environment: 'production',
     api: {
       baseUrl: '/api',
-      strapiUrl: 'https://api.tributestream.com',
+      strapiUrl: 'https://miraculous-morning-0acdf6e165.strapiapp.com',
       port: 443,             // HTTPS default port
       timeout: 5000,         // 5 seconds
       retryInterval: 30000,  // 30 seconds
@@ -243,14 +263,12 @@ try {
   validateConfig(config);
   logger.success(`Configuration loaded for ${environment} environment`);
   
-  // Log the configuration in development mode
-  if (dev) {
-    logger.debug('Active configuration', { 
-      environment: config.environment,
-      strapiUrl: config.api.strapiUrl,
-      port: config.api.port
-    });
-  }
+  // Always log the active configuration, not just in development mode
+  logger.debug('Active configuration', {
+    environment: config.environment,
+    strapiUrl: config.api.strapiUrl,
+    port: config.api.port
+  });
 } catch (error) {
   logger.error('Configuration validation failed', { error });
   

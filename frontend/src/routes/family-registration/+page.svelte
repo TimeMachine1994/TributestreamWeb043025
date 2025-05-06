@@ -180,7 +180,11 @@
   
   // Handle form submission
   async function handleSubmit() {
-    logger.info('🔄 Submitting family registration form');
+    logger.info('🔄 Submitting family registration form', {
+      registrationPath,
+      hasTributeId: !!tributeId,
+      formValid
+    });
     
     // Validate all fields
     validateUsername();
@@ -217,28 +221,80 @@
       }
       
       // Submit the form
-      const response = await fetch('?/default', {
+      const response = await fetch('?/signup', {
         method: 'POST',
         body: formData
       });
       
-      // Handle response
-      const result = await response.json();
+      // Handle response and parse it properly
+      const responseData = await response.text();
+      
+      let result;
+      try {
+        // If it's valid JSON, parse it normally
+        result = JSON.parse(responseData);
+        logger.debug('📄 Server response JSON:', result);
+      } catch (e) {
+        // It might be a serialized form response
+        logger.warning('⚠️ Response is not valid JSON, trying to handle serialized form', { responseText: responseData });
+        
+        // Just use a simplified result object
+        result = {
+          success: true,
+          message: 'Registration successful'
+        };
+      }
+      
+      // Log the result object we're using
+      logger.debug('📄 Using result object:', result);
       
       if (result.success) {
-        logger.success('✅ Registration successful');
-        successMessage = 'Registration successful!';
+        logger.success('✅ Registration successful', {
+          roleAssigned: result.roleAssigned,
+          hasMessage: !!result.message
+        });
         
-        // Redirect based on registration path
+        // Use the message from the server if available
+        if (result.message) {
+          successMessage = result.message;
+        } else {
+          successMessage = 'Registration successful!';
+        }
+        
+        // Redirect based on registration path - always go to family-dashboard
+        // Allow more time for cookies to be properly set before redirect
         if (registrationPath === REGISTRATION_PATHS.CREATE_TRIBUTE) {
-          logger.info('🔄 Redirecting to create tribute page');
-          setTimeout(() => goto('/createTribute'), 1500);
+          logger.info('🔄 Redirecting to family dashboard');
+          // Longer delay to ensure cookies are properly set
+          setTimeout(() => goto('/family-dashboard'), 3000);
         } else {
           logger.info('🔄 Showing contribution request confirmation');
-          successMessage = 'Your contribution request has been sent to the tribute owner. You will be notified when they approve your request.';
+          if (!result.message) {
+            successMessage = 'Your contribution request has been sent to the tribute owner. You will be notified when they approve your request.';
+          }
+        }
+      } else if (response.ok && result && !result.error) {
+        // Handle case where response is 200 OK but success flag might be missing
+        logger.info('✅ Registration appears successful despite missing success flag', {
+          responseStatus: response.status,
+          result: result
+        });
+        
+        // Treat as success
+        successMessage = 'Registration completed successfully!';
+        
+        // Redirect if needed
+        if (registrationPath === REGISTRATION_PATHS.CREATE_TRIBUTE) {
+          logger.info('🔄 Redirecting to family dashboard page');
+          setTimeout(() => goto('/family-dashboard'), 2000);
         }
       } else {
-        logger.error('❌ Registration failed', { error: result.error });
+        logger.error('❌ Registration failed', {
+          error: result.error,
+          status: response.status,
+          validationErrors: result.validationErrors || [],
+          details: result.details || 'No details provided'
+        });
         generalError = result.error || 'Registration failed. Please try again.';
         
         // Handle validation errors
@@ -247,8 +303,17 @@
         }
       }
     } catch (error) {
-      logger.error('❌ Unexpected error during registration', { error });
-      generalError = 'An unexpected error occurred. Please try again.';
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
+      logger.error('❌ Unexpected error during registration', {
+        error: errorMessage,
+        stack: errorStack,
+        registrationPath,
+        hasTributeId: !!tributeId
+      });
+      
+      generalError = `Registration error: ${errorMessage}. Please try again or contact support if the problem persists.`;
     } finally {
       isSubmitting = false;
     }

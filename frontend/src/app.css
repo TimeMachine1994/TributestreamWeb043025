@@ -9,3 +9,5 @@
 
 @source '../node_modules/@skeletonlabs/skeleton-svelte/dist';
 @import '../theme.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
