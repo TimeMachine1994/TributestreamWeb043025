@@ -764,35 +764,35 @@
 <Navbar />
 
 <!-- Main Dashboard Content -->
-<div class="bg-gray-50 min-h-screen">
+<div class="bg-surface-100-800-token min-h-screen">
   <!-- Dashboard Content Container -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="container mx-auto p-4 md:p-6 lg:p-8">
     
     <!-- TributeHeader Section -->
-    <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+    <div class="card mb-6 overflow-hidden">
       <div class="p-6">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">Family Dashboard</h1>
-            <p class="text-gray-600 mt-1">Manage your family tributes and livestreams</p>
+            <h1 class="h1">Family Dashboard</h1>
+            <p class="mt-1">Manage your family tributes and livestreams</p>
           </div>
           <div class="mt-4 md:mt-0">
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+            <span class="badge variant-filled-primary">
               Role: {getUserRoleDisplay()}
             </span>
           </div>
         </div>
         
         <!-- Tribute URL Section -->
-        <div class="mt-6 border-t border-gray-200 pt-4">
+        <div class="mt-6 border-t border-surface-300-600-token pt-4">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between">
             <div>
-              <h2 class="text-lg font-medium text-gray-900">Your Tribute URL</h2>
+              <h2 class="h3">Your Tribute URL</h2>
               <div class="mt-2 flex items-center">
-                <span class="text-gray-600 bg-gray-100 px-3 py-2 rounded-md text-sm font-mono">
+                <span class="badge variant-soft-tertiary py-2 font-mono">
                   tributestream.com/{featuredTribute?.attributes.slug || 'your-tribute'}
                 </span>
-                <button class="ml-2 text-blue-600 hover:text-blue-800">
+                <button class="ml-2 btn-icon btn-icon-sm variant-soft-primary">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
@@ -802,10 +802,10 @@
             
             <!-- Social Share Group -->
             <div class="mt-4 sm:mt-0">
-              <h3 class="text-sm font-medium text-gray-700">Share with</h3>
+              <h3 class="text-sm font-medium">Share with</h3>
               <div class="mt-2 flex space-x-2">
                 <button
-                  class="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700"
+                  class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
                   onclick={() => featuredTribute && shareTribute(featuredTribute, 'facebook')}
                 >
                   <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -813,7 +813,7 @@
                   </svg>
                 </button>
                 <button
-                  class="p-2 rounded-full bg-blue-400 text-white hover:bg-blue-500"
+                  class="btn-icon btn-icon-sm variant-filled-secondary rounded-full"
                   onclick={() => featuredTribute && shareTribute(featuredTribute, 'twitter')}
                 >
                   <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -821,7 +821,7 @@
                   </svg>
                 </button>
                 <button
-                  class="p-2 rounded-full bg-green-500 text-white hover:bg-green-600"
+                  class="btn-icon btn-icon-sm variant-filled-success rounded-full"
                   onclick={() => featuredTribute && shareTribute(featuredTribute, 'linkedin')}
                 >
                   <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -829,7 +829,7 @@
                   </svg>
                 </button>
                 <button
-                  class="p-2 rounded-full bg-red-600 text-white hover:bg-red-700"
+                  class="btn-icon btn-icon-sm variant-filled-error rounded-full"
                   onclick={() => featuredTribute && shareTribute(featuredTribute, 'email')}
                 >
                   <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -841,8 +841,8 @@
             
             <!-- Payment Status -->
             <div class="mt-4 sm:mt-0">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                <svg class="mr-1.5 h-2 w-2 text-green-600" fill="currentColor" viewBox="0 0 8 8">
+              <span class="badge variant-filled-success">
+                <svg class="mr-1.5 h-2 w-2" fill="currentColor" viewBox="0 0 8 8">
                   <circle cx="4" cy="4" r="3" />
                 </svg>
                 Payment Complete
@@ -857,17 +857,17 @@
     {#if hasError}
       <!-- Special handling for token expiration errors -->
       {#if errorMessage.includes('Invalid or expired token') || errorMessage.includes('Authentication failed')}
-        <div class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+        <div class="mb-4 alert variant-filled-error">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div class="flex">
               <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                 </svg>
               </div>
               <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">Your session has expired</h3>
-                <p class="text-sm text-red-700 mt-1">
+                <h3 class="h4">Your session has expired</h3>
+                <p class="mt-1">
                   Your login token has expired. Please log out and sign back in to continue.
                 </p>
               </div>
@@ -875,7 +875,7 @@
             <div class="mt-4 sm:mt-0">
               <button
                 onclick={handleLogout}
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                class="btn variant-filled-error"
               >
                 Log Out
               </button>
@@ -883,15 +883,15 @@
           </div>
         </div>
       {:else}
-        <div class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+        <div class="mb-4 alert variant-filled-error">
           <div class="flex">
             <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
               </svg>
             </div>
             <div class="ml-3">
-              <p class="text-sm text-red-700">❌ {errorMessage}</p>
+              <p>❌ {errorMessage}</p>
             </div>
           </div>
         </div>
@@ -899,43 +899,43 @@
     {/if}
     
     {#if successMessage}
-      <div class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-md">
+      <div class="mb-4 alert variant-filled-success">
         <div class="flex">
           <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
           </div>
           <div class="ml-3">
-            <p class="text-sm text-green-700">✅ {successMessage}</p>
+            <p>✅ {successMessage}</p>
           </div>
         </div>
       </div>
     {/if}
     
     {#if fetchError}
-      <div class="mb-4 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-md">
+      <div class="mb-4 alert variant-filled-warning">
         <div class="flex">
           <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
           </div>
           <div class="ml-3">
-            <p class="text-sm text-yellow-700">⚠️ {fetchError}</p>
+            <p>⚠️ {fetchError}</p>
           </div>
         </div>
       </div>
     {/if}
     
     <!-- Schedule Table -->
-    <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+    <div class="card mb-6 overflow-hidden">
       <div class="p-6">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-gray-900">Livestream Schedule</h2>
+          <h2 class="h2">Livestream Schedule</h2>
           {#if featuredTribute}
             <button
-              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              class="btn btn-sm variant-filled-primary"
               onclick={() => featuredTribute && goto(`/schedule-editor?tributeId=${featuredTribute.id}`)}
             >
               <svg class="-ml-0.5 mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -955,22 +955,22 @@
           </div>
         {:else}
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
+            <table class="table table-compact">
+              <thead>
                 <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stream Type</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                  <th>Start Time</th>
+                  <th>Stream Type</th>
+                  <th>Duration</th>
+                  <th>Location</th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
+              <tbody>
                 {#each scheduleData as item}
                   <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.startTime}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.streamType}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.duration}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.location}</td>
+                    <td>{item.startTime}</td>
+                    <td>{item.streamType}</td>
+                    <td>{item.duration}</td>
+                    <td>{item.location}</td>
                   </tr>
                 {/each}
               </tbody>
@@ -982,41 +982,41 @@
     
     <!-- Pending Checkouts -->
     {#if pendingCheckouts.length > 0}
-      <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+      <div class="card mb-6 overflow-hidden">
         <div class="p-6">
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-gray-900">Pending Checkouts</h2>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+            <h2 class="h2">Pending Checkouts</h2>
+            <span class="badge variant-filled-warning">
               {pendingCheckouts.length} pending
             </span>
           </div>
           
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
+            <table class="table table-compact">
+              <thead>
                 <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th>Date</th>
+                  <th>Package</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
+              <tbody>
                 {#each pendingCheckouts as checkout}
                   <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatSavedDate(checkout.savedAt)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{checkout.selectedPackage}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(checkout.totalCost)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <td>{formatSavedDate(checkout.savedAt)}</td>
+                    <td>{checkout.selectedPackage}</td>
+                    <td>{formatCurrency(checkout.totalCost)}</td>
+                    <td>
+                      <span class="badge variant-filled-warning">
                         Checkout in progress
                       </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td>
                       <button
                         onclick={() => handleResumeCheckout(checkout.id)}
-                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                        class="btn btn-sm variant-filled-primary"
                       >
                         Resume Checkout
                       </button>
@@ -1032,41 +1032,41 @@
     
     <!-- Saved Checkouts -->
     {#if savedCheckouts.length > 0}
-      <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+      <div class="card mb-6 overflow-hidden">
         <div class="p-6">
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-gray-900">Saved Livestreams</h2>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+            <h2 class="h2">Saved Livestreams</h2>
+            <span class="badge variant-filled-primary">
               {savedCheckouts.length} saved
             </span>
           </div>
           
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
+            <table class="table table-compact">
+              <thead>
                 <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th>Date</th>
+                  <th>Package</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
+              <tbody>
                 {#each savedCheckouts as checkout}
                   <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatSavedDate(checkout.savedAt)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{checkout.selectedPackage}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(checkout.totalCost)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <td>{formatSavedDate(checkout.savedAt)}</td>
+                    <td>{checkout.selectedPackage}</td>
+                    <td>{formatCurrency(checkout.totalCost)}</td>
+                    <td>
+                      <span class="badge variant-filled-primary">
                         Saved for later
                       </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td>
                       <button
                         onclick={() => handleResumeCheckout(checkout.id)}
-                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                        class="btn btn-sm variant-filled-primary"
                       >
                         Complete Checkout
                       </button>
@@ -1082,11 +1082,11 @@
     
     <!-- Contribution Requests Section -->
     {#if contributionRequests.length > 0}
-      <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+      <div class="card mb-6 overflow-hidden">
         <div class="p-6">
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-gray-900">Contribution Requests</h2>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+            <h2 class="h2">Contribution Requests</h2>
+            <span class="badge variant-filled-warning">
               {contributionRequests.filter(r => r.attributes.status === 'pending').length} pending
             </span>
           </div>
@@ -1099,75 +1099,75 @@
               </svg>
             </div>
           {:else if contributionRequestsError}
-            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+            <div class="alert variant-filled-error">
               <div class="flex">
                 <div class="flex-shrink-0">
-                  <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                   </svg>
                 </div>
                 <div class="ml-3">
-                  <p class="text-sm text-red-700">❌ {contributionRequestsError}</p>
+                  <p>❌ {contributionRequestsError}</p>
                 </div>
               </div>
             </div>
           {:else}
             <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+              <table class="table table-compact">
+                <thead>
                   <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contributor</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tribute</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request Date</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th>Contributor</th>
+                    <th>Tribute</th>
+                    <th>Request Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody>
                   {#each contributionRequests as request}
                     <tr>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td>
                         {request.attributes.contributor?.username || 'Unknown User'}
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td>
                         {request.attributes.tribute?.attributes?.name || 'Unknown Tribute'}
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td>
                         {formatDate(request.attributes.requestDate)}
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
+                      <td>
                         {#if request.attributes.status === 'pending'}
-                          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <span class="badge variant-filled-warning">
                             Pending
                           </span>
                         {:else if request.attributes.status === 'approved'}
-                          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <span class="badge variant-filled-success">
                             Approved
                           </span>
                         {:else if request.attributes.status === 'rejected'}
-                          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          <span class="badge variant-filled-error">
                             Rejected
                           </span>
                         {/if}
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td>
                         {#if request.attributes.status === 'pending'}
                           <div class="flex space-x-2">
                             <button
                               onclick={() => approveContributionRequest(request.id)}
-                              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                              class="btn btn-sm variant-filled-success"
                             >
                               Approve
                             </button>
                             <button
                               onclick={() => rejectContributionRequest(request.id)}
-                              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                              class="btn btn-sm variant-filled-error"
                             >
                               Reject
                             </button>
                           </div>
                         {:else}
-                          <span class="text-gray-500">
+                          <span>
                             {request.attributes.responseDate ? `Responded on ${formatDate(request.attributes.responseDate)}` : 'No response date'}
                           </span>
                         {/if}
@@ -1184,48 +1184,48 @@
     
     <!-- Tributes List -->
     {#if tributes.length > 0}
-      <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+      <div class="card overflow-hidden mb-6">
         <div class="p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-4">Your Tributes</h2>
+          <h2 class="h2 mb-4">Your Tributes</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {#each tributes as tribute (tribute.id)}
-              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div class="card p-4 hover:variant-soft transition-all duration-100">
                 <div class="flex justify-between items-start">
-                  <h3 class="text-lg font-medium text-gray-900">{tribute.attributes.name}</h3>
+                  <h3 class="h3">{tribute.attributes.name}</h3>
                   {#if tribute.attributes.packageId}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span class="badge variant-filled-primary">
                       {tribute.attributes.packageInfo?.name || 'Standard Package'}
                     </span>
                   {/if}
                 </div>
-                <p class="text-sm text-gray-500 mt-1">/{tribute.attributes.slug}</p>
+                <p class="mt-1">/{tribute.attributes.slug}</p>
                 
                 {#if tribute.attributes.liveStreamDate}
-                  <div class="mt-3 bg-gray-50 rounded-md p-2">
-                    <p class="text-sm text-gray-600">📅 {formatDate(tribute.attributes.liveStreamDate)}</p>
-                    <p class="text-sm text-gray-600">⏰ {formatTime(tribute.attributes.liveStreamStartTime)}</p>
+                  <div class="mt-3 card variant-soft p-2">
+                    <p>📅 {formatDate(tribute.attributes.liveStreamDate)}</p>
+                    <p>⏰ {formatTime(tribute.attributes.liveStreamStartTime)}</p>
                   </div>
                 {/if}
                 
                 <div class="mt-4 flex justify-end space-x-2">
-                  <a href={`/${tribute.attributes.slug}`} class="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                  <a href={`/${tribute.attributes.slug}`} class="btn btn-icon btn-sm variant-soft">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   </a>
-                  <button onclick={() => startEdit(tribute)} class="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                  <button onclick={() => startEdit(tribute)} class="btn btn-icon btn-sm variant-soft">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                     </svg>
                   </button>
-                  <button onclick={() => goToCalculator(tribute.id)} class="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                  <button onclick={() => goToCalculator(tribute.id)} class="btn btn-icon btn-sm variant-soft">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </button>
                   {#if isFuneralDirector()}
-                    <button onclick={() => confirmDelete(tribute)} class="inline-flex items-center p-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50">
+                    <button onclick={() => confirmDelete(tribute)} class="btn btn-icon btn-sm variant-soft-error">
                       <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
@@ -1238,15 +1238,15 @@
         </div>
       </div>
     {:else}
-      <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+      <div class="card overflow-hidden mb-6">
         <div class="p-6 text-center">
           <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
           </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900">No tributes</h3>
-          <p class="mt-1 text-sm text-gray-500">Get started by creating a new tribute.</p>
+          <h3 class="h3 mt-2">No tributes</h3>
+          <p class="mt-1">Get started by creating a new tribute.</p>
           <div class="mt-6">
-            <button onclick={toggleCreateForm} class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <button onclick={toggleCreateForm} class="btn variant-filled-primary">
               <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -1259,50 +1259,50 @@
     
     <!-- Main Tribute Card Section -->
     {#if featuredTribute}
-      <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+      <div class="card mb-6 overflow-hidden">
         <div class="p-6">
           <div class="flex flex-col lg:flex-row">
             <!-- Tribute Info -->
             <div class="lg:w-2/3 pr-0 lg:pr-6">
               <div class="flex justify-between items-start">
-                <h2 class="text-xl font-bold text-gray-900">{featuredTribute.attributes.name}</h2>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <h2 class="h2">{featuredTribute.attributes.name}</h2>
+                <span class="badge variant-filled-primary">
                   {featuredTribute.attributes.packageInfo?.name || 'Standard Package'}
                 </span>
               </div>
               
               <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <h3 class="text-sm font-medium text-gray-500">Date</h3>
-                  <p class="mt-1 text-lg font-semibold text-gray-900">{formatDate(featuredTribute.attributes.liveStreamDate)}</p>
+                <div class="card variant-soft p-4">
+                  <h3 class="h4">Date</h3>
+                  <p class="mt-1">{formatDate(featuredTribute.attributes.liveStreamDate)}</p>
                 </div>
                 
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <h3 class="text-sm font-medium text-gray-500">Time</h3>
-                  <p class="mt-1 text-lg font-semibold text-gray-900">{formatTime(featuredTribute.attributes.liveStreamStartTime)}</p>
+                <div class="card variant-soft p-4">
+                  <h3 class="h4">Time</h3>
+                  <p class="mt-1">{formatTime(featuredTribute.attributes.liveStreamStartTime)}</p>
                 </div>
                 
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <h3 class="text-sm font-medium text-gray-500">Duration</h3>
-                  <p class="mt-1 text-lg font-semibold text-gray-900">
+                <div class="card variant-soft p-4">
+                  <h3 class="h4">Duration</h3>
+                  <p class="mt-1">
                     {featuredTribute.attributes.liveStreamDuration || 1} hour{Number(featuredTribute.attributes.liveStreamDuration) !== 1 ? 's' : ''}
                   </p>
                 </div>
                 
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <h3 class="text-sm font-medium text-gray-500">Location</h3>
-                  <p class="mt-1 text-lg font-semibold text-gray-900">
+                <div class="card variant-soft p-4">
+                  <h3 class="h4">Location</h3>
+                  <p class="mt-1">
                     {featuredTribute.attributes.locations?.[0]?.name || 'Not specified'}
                   </p>
-                  <p class="text-sm text-gray-500">
+                  <p>
                     {featuredTribute.attributes.locations?.[0]?.address || ''}
                   </p>
                 </div>
               </div>
               
               <div class="mt-6">
-                <h3 class="text-sm font-medium text-gray-500">Notes</h3>
-                <p class="mt-1 text-gray-600">
+                <h3 class="h4">Notes</h3>
+                <p class="mt-1">
                   Please arrive 15 minutes early. The service will be livestreamed for those who cannot attend in person.
                 </p>
               </div>
@@ -1310,11 +1310,11 @@
             
             <!-- Media Preview -->
             <div class="lg:w-1/3 mt-6 lg:mt-0">
-              <div class="bg-gray-100 rounded-lg p-4 h-full">
+              <div class="card variant-soft p-4 h-full">
                 <div class="flex justify-between items-center mb-3">
-                  <h3 class="text-sm font-medium text-gray-700">Media Preview</h3>
+                  <h3 class="h4">Media Preview</h3>
                   <button
-                    class="text-xs text-blue-600 hover:text-blue-800"
+                    class="btn btn-sm variant-soft-primary"
                     onclick={() => featuredTribute && uploadMedia(featuredTribute)}
                   >
                     Upload New
@@ -1322,7 +1322,7 @@
                 </div>
                 
                 {#if getMediaLoading()}
-                  <div class="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center">
+                  <div class="h-48 card variant-ghost flex items-center justify-center">
                     <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -1330,7 +1330,7 @@
                   </div>
                 {:else if displayMediaItems.length > 0}
                   <!-- Display first media item as main preview -->
-                  <div class="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden">
+                  <div class="h-48 card variant-ghost overflow-hidden">
                     {#if displayMediaItems[0].type === 'image'}
                       <img src={displayMediaItems[0].url} alt={displayMediaItems[0].name} class="object-cover w-full h-full" />
                     {:else if displayMediaItems[0].type === 'video'}
@@ -1357,7 +1357,7 @@
                   <!-- Thumbnails for additional media -->
                   <div class="mt-3 grid grid-cols-3 gap-2">
                     {#each displayMediaItems.slice(1, 4) as item, i}
-                      <div class="bg-gray-200 rounded-md h-16 overflow-hidden">
+                      <div class="card variant-ghost h-16 overflow-hidden">
                         {#if item.type === 'image'}
                           <img src={item.thumbnailUrl || item.url} alt={item.name} class="object-cover w-full h-full" />
                         {:else if item.type === 'video'}
@@ -1382,7 +1382,7 @@
                     {#if displayMediaItems.length === 1}
                       <!-- Placeholder thumbnails if only one media item -->
                       {#each Array(3) as _, i}
-                        <div class="bg-gray-200 rounded-md h-16 flex items-center justify-center">
+                        <div class="card variant-ghost h-16 flex items-center justify-center">
                           <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
@@ -1391,7 +1391,7 @@
                     {:else if displayMediaItems.length === 2}
                       <!-- Placeholder thumbnails if only two media items -->
                       {#each Array(2) as _, i}
-                        <div class="bg-gray-200 rounded-md h-16 flex items-center justify-center">
+                        <div class="card variant-ghost h-16 flex items-center justify-center">
                           <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
@@ -1399,7 +1399,7 @@
                       {/each}
                     {:else if displayMediaItems.length === 3}
                       <!-- Placeholder thumbnail if only three media items -->
-                      <div class="bg-gray-200 rounded-md h-16 flex items-center justify-center">
+                      <div class="card variant-ghost h-16 flex items-center justify-center">
                         <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -1408,7 +1408,7 @@
                   </div>
                 {:else}
                   <!-- Empty state when no media items -->
-                  <div class="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden">
+                  <div class="h-48 card variant-ghost overflow-hidden">
                     <div class="flex items-center justify-center h-full">
                       <svg class="h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -1417,7 +1417,7 @@
                   </div>
                   <div class="mt-3 grid grid-cols-3 gap-2">
                     {#each Array(3) as _}
-                      <div class="bg-gray-200 rounded-md h-16 flex items-center justify-center">
+                      <div class="card variant-ghost h-16 flex items-center justify-center">
                         <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -1435,11 +1435,11 @@
     <!-- Action Button Group -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <button
-        class="bg-white shadow rounded-lg p-4 flex flex-col items-center justify-center hover:bg-blue-50 transition-colors"
+        class="card p-4 flex flex-col items-center justify-center hover:variant-soft transition-all duration-100"
         onclick={() => featuredTribute && uploadMedia(featuredTribute)}
         disabled={!featuredTribute || getMediaLoading()}
       >
-        <div class="bg-blue-100 p-3 rounded-full mb-3">
+        <div class="avatar bg-primary-500/20 p-3 rounded-full mb-3">
           {#if getMediaLoading()}
             <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1455,11 +1455,11 @@
       </button>
       
       <button
-        class="bg-white shadow rounded-lg p-4 flex flex-col items-center justify-center hover:bg-blue-50 transition-colors"
+        class="card p-4 flex flex-col items-center justify-center hover:variant-soft transition-all duration-100"
         onclick={() => featuredTribute && editSchedule(featuredTribute)}
         disabled={!featuredTribute || getLocationsLoading()}
       >
-        <div class="bg-purple-100 p-3 rounded-full mb-3">
+        <div class="avatar bg-tertiary-500/20 p-3 rounded-full mb-3">
           {#if getLocationsLoading()}
             <svg class="animate-spin h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1475,24 +1475,124 @@
       </button>
       
       <button
-        class="bg-white shadow rounded-lg p-4 flex flex-col items-center justify-center hover:bg-blue-50 transition-colors"
+        class="card p-4 flex flex-col items-center justify-center hover:variant-soft transition-all duration-100"
         onclick={() => featuredTribute && transferContacts(featuredTribute)}
         disabled={!featuredTribute || isLoading}
       >
-        <div class="bg-green-100 p-3 rounded-full mb-3">
+        <div class="avatar bg-success-500/20 p-3 rounded-full mb-3">
           <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </div>
+        
+        <!-- Edit Tribute Modal -->
+        {#if isEditing}
+          <div class="modal-backdrop">
+            <div class="modal card p-6 w-modal shadow-xl">
+              <h2 class="h2 mb-4">Edit Tribute</h2>
+              <div class="form-group">
+                <label class="label" for="editTributeName">
+                  <span>Tribute Name</span>
+                  <input
+                    class="input"
+                    id="editTributeName"
+                    type="text"
+                    bind:value={editName}
+                    placeholder="Enter tribute name"
+                    required
+                  />
+                </label>
+              </div>
+              
+              <div class="flex justify-end space-x-2 mt-6">
+                <button class="btn variant-soft" onclick={cancelEdit}>Cancel</button>
+                <button
+                  class="btn variant-filled-primary"
+                  onclick={saveEdit}
+                  disabled={isSubmitting || editName.trim().length < 2}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        {/if}
+        
+        <!-- Delete Tribute Modal -->
+        {#if isDeleting}
+          <div class="modal-backdrop">
+            <div class="modal card p-6 w-modal shadow-xl">
+              <h2 class="h2 mb-4">Delete Tribute</h2>
+              <p>Are you sure you want to delete this tribute? This action cannot be undone.</p>
+              
+              <div class="flex justify-end space-x-2 mt-6">
+                <button class="btn variant-soft" onclick={cancelDelete}>Cancel</button>
+                <button
+                  class="btn variant-filled-error"
+                  onclick={deleteTribute}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Deleting...' : 'Delete Tribute'}
+                </button>
+              </div>
+            </div>
+          </div>
+        {/if}
+        
+        <!-- Create Tribute Modal -->
+        {#if isCreating}
+          <div class="modal-backdrop">
+            <div class="modal card p-6 w-modal shadow-xl">
+              <h2 class="h2 mb-4">Create New Tribute</h2>
+              <div class="form-group">
+                <label class="label" for="newTributeName">
+                  <span>Tribute Name</span>
+                  <input
+                    class="input"
+                    id="newTributeName"
+                    type="text"
+                    bind:value={newTributeName}
+                    placeholder="Enter tribute name"
+                    required
+                  />
+                  {#if nameError}
+                    <small class="text-error-500">{nameError}</small>
+                  {/if}
+                </label>
+              </div>
+              
+              <div class="flex justify-end space-x-2 mt-6">
+                <button class="btn variant-soft" onclick={toggleCreateForm}>Cancel</button>
+                <button
+                  class="btn variant-filled-primary"
+                  onclick={createTribute}
+                  disabled={isSubmitting || !formValid}
+                >
+                  {isSubmitting ? 'Creating...' : 'Create Tribute'}
+                </button>
+              </div>
+            </div>
+          </div>
+        {/if}
+        
+        <style>
+          .modal-backdrop {
+            @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50;
+          }
+          .modal {
+            max-height: 90vh;
+            overflow-y: auto;
+          }
+        </style>
         <span class="text-sm font-medium text-gray-900">Transfer Contacts</span>
       </button>
       
       <button
-        class="bg-white shadow rounded-lg p-4 flex flex-col items-center justify-center hover:bg-blue-50 transition-colors"
+        class="card p-4 flex flex-col items-center justify-center hover:variant-soft transition-all duration-100"
         onclick={() => featuredTribute && inviteOthers(featuredTribute)}
         disabled={!featuredTribute || isLoading}
       >
-        <div class="bg-yellow-100 p-3 rounded-full mb-3">
+        <div class="avatar bg-warning-500/20 p-3 rounded-full mb-3">
           <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>

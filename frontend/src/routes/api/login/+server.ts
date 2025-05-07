@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { PUBLIC_STRAPI_URL } from '$env/static/public';
 
 // POST handler for login
 export const POST: RequestHandler = async ({ request, fetch, cookies }) => {
@@ -10,9 +11,9 @@ export const POST: RequestHandler = async ({ request, fetch, cookies }) => {
     const body = await request.json();
     
     // Get Strapi URL from config
-    const strapiUrl = import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1338';
-    console.log(`🌐 API proxy: Using Strapi URL: ${strapiUrl}`);
     
+    console.log(`🌐 API proxy: Using Strapi URL: ${PUBLIC_STRAPI_URL}`);
+    let strapiUrl = PUBLIC_STRAPI_URL;
     // Forward request to Strapi with timeout and retry logic
     const maxRetries = 2;
     let retryCount = 0;

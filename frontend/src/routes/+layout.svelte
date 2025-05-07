@@ -3,7 +3,7 @@
 	import BackendStatus from '$lib/components/BackendStatus.svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
 
-	let { data, children } = $props<{ data: { authenticated: boolean } }>();
+	let { data, children } = $props();
 	
 	// Track page loading state
 	let isNavigating = $state(false);
@@ -35,14 +35,14 @@
 	});
 </script>
 
-<div class="flex flex-col min-h-screen">
-	<Navbar authenticated={data.authenticated} user={data.user} />
+<div class="h-full flex flex-col">
+	<Navbar />
 	
 	{#if isNavigating}
 		<div class="loading-bar"></div>
 	{/if}
 	
-	<div class="container mx-auto px-4 py-8 flex-grow">
+	<div class="container p-4 py-8 flex-1">
 		<BackendStatus />
 		
 		<main>
@@ -76,8 +76,8 @@
 		}
 	</style>
 	
-	<footer class="bg-gray-100 py-6">
-		<div class="container mx-auto px-4 text-center text-gray-600">
+	<footer class="surface-200 py-6">
+		<div class="container p-4 text-center text-surface-700">
 			<p>© {new Date().getFullYear()} TributeStream. All rights reserved.</p>
 		</div>
 	</footer>

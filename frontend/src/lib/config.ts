@@ -9,7 +9,7 @@
 import { dev } from '$app/environment';
 import { browser } from '$app/environment';
 import { createLogger } from '$lib/logger';
-
+import { PUBLIC_STRAPI_URL } from '$env/static/public';
 // Create a dedicated logger for configuration
 const logger = createLogger('Config');
 
@@ -56,20 +56,12 @@ export interface AppConfig {
  * 3. Default to production
  */
 function detectEnvironment(): Environment {
-  // TEMPORARY FIX: Hardcode to production environment
-  // This bypasses the environment variable detection which is not working
-  logger.debug('Using hardcoded production environment');
-  return 'production';
-  
-  /* Original code commented out for reference
   // Check for environment variable
   const envFromVar = import.meta.env.PUBLIC_ENVIRONMENT;
   
   // Log all environment variables for debugging
   logger.debug('Environment variables:', {
-    PUBLIC_ENVIRONMENT: import.meta.env.PUBLIC_ENVIRONMENT,
-    PUBLIC_STRAPI_URL: import.meta.env.PUBLIC_STRAPI_URL,
-    PUBLIC_STRAPI_PORT: import.meta.env.PUBLIC_STRAPI_PORT,
+ 
     dev: dev
   });
   
@@ -80,15 +72,17 @@ function detectEnvironment(): Environment {
     }
     logger.warning(`Invalid environment value: ${envFromVar}, falling back to detection`);
   } else {
-    logger.warning('PUBLIC_ENVIRONMENT variable not found, falling back to detection');
+    logger.debug('PUBLIC_ENVIRONMENT variable not found, falling back to detection');
   }
   
   // Use development mode detection
   const detectedEnv = dev ? 'development' : 'production';
   logger.debug(`Detected environment based on dev flag: ${detectedEnv}`);
   return detectedEnv;
-  */
 }
+
+// Default Strapi URL from environment variable - will be used by all environments
+const DEFAULT_STRAPI_URL = 'https://miraculous-morning-0acdf6e165.strapiapp.com';
 
 /**
  * Environment-specific configurations with defaults
@@ -99,8 +93,8 @@ const configs: Record<Environment, AppConfig> = {
     environment: 'development',
     api: {
       baseUrl: '/api',
-      strapiUrl: 'http://localhost:1338',
-      port: 1338,
+      strapiUrl: DEFAULT_STRAPI_URL,
+      port: 443, // HTTPS default port
       timeout: 8000,         // 8 seconds
       retryInterval: 5000,   // 5 seconds
       maxRetries: 5
@@ -119,8 +113,8 @@ const configs: Record<Environment, AppConfig> = {
     environment: 'staging',
     api: {
       baseUrl: '/api',
-      strapiUrl: 'http://staging-api.tributestream.com',
-      port: 1338,
+      strapiUrl: DEFAULT_STRAPI_URL,
+      port: 443, // HTTPS default port
       timeout: 8000,         // 8 seconds
       retryInterval: 15000,  // 15 seconds
       maxRetries: 2
@@ -139,7 +133,7 @@ const configs: Record<Environment, AppConfig> = {
     environment: 'production',
     api: {
       baseUrl: '/api',
-      strapiUrl: 'https://miraculous-morning-0acdf6e165.strapiapp.com',
+      strapiUrl: DEFAULT_STRAPI_URL,
       port: 443,             // HTTPS default port
       timeout: 5000,         // 5 seconds
       retryInterval: 30000,  // 30 seconds
@@ -170,9 +164,14 @@ function loadFromEnvironment(baseConfig: AppConfig): AppConfig {
   }
   
   if (env.PUBLIC_STRAPI_URL) {
+    // Always use the PUBLIC_STRAPI_URL environment variable when available
     config.api.strapiUrl = env.PUBLIC_STRAPI_URL;
+    logger.debug(`Using Strapi URL from environment variable: ${config.api.strapiUrl}`);
+  } else {
+    logger.debug(`Using default Strapi URL: ${config.api.strapiUrl}`);
   }
   
+  // Port is usually not needed with the full URL, but kept for compatibility
   if (env.PUBLIC_STRAPI_PORT) {
     const port = parseInt(env.PUBLIC_STRAPI_PORT, 10);
     if (!isNaN(port)) {

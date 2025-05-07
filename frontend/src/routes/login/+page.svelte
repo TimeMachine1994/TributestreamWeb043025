@@ -45,14 +45,14 @@
   });
 </script>
 
-<div class="login-container">
-  <h1>Login</h1>
+<div class="container h-auto mx-auto max-w-md p-4">
+  <h1 class="h1 mb-4">Login</h1>
   
   {#if success}
-    <div class="success-message">
-      <h2>Login successful! 🎉</h2>
+    <div class="card variant-filled-success p-4">
+      <h2 class="h2">Login successful! 🎉</h2>
       {#if userData}
-        <div class="user-info">
+        <div class="card p-4 variant-soft mt-4">
           <p>Welcome back, <strong>{userData.username}</strong>!</p>
           {#if userData.email}
             <p>Email: {userData.email}</p>
@@ -61,9 +61,9 @@
       {:else}
         <p>Welcome back!</p>
       {/if}
-      <p class="redirect-message">
+      <p class="mt-4 text-sm">
         {#if redirecting}
-          <span class="spinner"></span>
+          <span class="badge-icon"><i class="fa-solid fa-spinner fa-spin-pulse"></i></span>
           {#if redirectTo.includes('fd-dashboard')}
             Redirecting to Funeral Director dashboard...
           {:else}
@@ -74,12 +74,12 @@
     </div>
   {:else}
     {#if hasRoleMessage}
-      <div class="role-message">
+      <div class="alert variant-filled-warning mb-4">
+        <span class="badge-icon">⚠️</span>
         <p>
-          <span class="role-icon">⚠️</span>
           You need <strong>{formattedRequiredRoles}</strong> permissions to access the requested page.
         </p>
-        <p class="role-info">
+        <p class="text-sm mt-2">
           Please log in with an account that has the required permissions.
         </p>
       </div>
@@ -92,77 +92,83 @@
         isSubmitting = false;
         console.log("🏁 Login process completed", result);
       };
-    }}>
+    }} class="card p-4 variant-soft space-y-4">
       <div class="form-group">
-        <label for="username">Username/Email</label>
-        <input
-          type="text"
-          id="username"
-          name="username"
-          value={form?.username ?? ''}
-          required
-          autocomplete="username"
-        />
+        <label class="label" for="username">
+          <span>Username/Email</span>
+          <input
+            class="input"
+            type="text"
+            id="username"
+            name="username"
+            value={form?.username ?? ''}
+            required
+            autocomplete="username"
+          />
+        </label>
       </div>
 
       <div class="form-group">
-        <label for="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          required
-          autocomplete="current-password"
-        />
+        <label class="label" for="password">
+          <span>Password</span>
+          <input
+            class="input"
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="current-password"
+          />
+        </label>
       </div>
 
       {#if form?.error}
-        <div class="error-message" class:connection-error={isConnectionError} class:validation-error={form.error.includes('Invalid format')}>
-          {#if isConnectionError}
-            <div class="error-icon">🔌</div>
-          {:else if form.error.includes('Invalid format')}
-            <div class="error-icon">⚠️</div>
-          {:else}
-            <div class="error-icon">❌</div>
-          {/if}
-          <div class="error-content">
-            <strong>{form.error}</strong>
-            
+        <div class="alert {isConnectionError ? 'variant-filled-warning' : form.error.includes('Invalid format') ? 'variant-filled-tertiary' : 'variant-filled-error'}">
+          <div class="flex items-center">
             {#if isConnectionError}
-              <div class="error-details">
-                <p>The authentication service is currently unavailable. This could be due to:</p>
-                <ul>
-                  <li>Server maintenance</li>
-                  <li>Network connectivity issues</li>
-                  <li>Temporary service outage</li>
-                </ul>
-                <p>Please try again later or contact support if the problem persists.</p>
-              </div>
+              <span class="mr-2">🔌</span>
             {:else if form.error.includes('Invalid format')}
-              <div class="error-details">
-                <p>There was a problem with the login request format. Please try:</p>
-                <ul>
-                  <li>Checking your username/email format</li>
-                  <li>Using only alphanumeric characters in your password</li>
-                  <li>Clearing your browser cache and cookies</li>
-                </ul>
-              </div>
+              <span class="mr-2">⚠️</span>
+            {:else}
+              <span class="mr-2">❌</span>  
             {/if}
+            <strong>{form.error}</strong>
           </div>
+          
+          {#if isConnectionError}
+            <div class="mt-2 text-sm">
+              <p>The authentication service is currently unavailable. This could be due to:</p>
+              <ul class="list-disc list-inside ml-2 my-2">
+                <li>Server maintenance</li>
+                <li>Network connectivity issues</li>
+                <li>Temporary service outage</li>
+              </ul>
+              <p>Please try again later or contact support if the problem persists.</p>
+            </div>
+          {:else if form.error.includes('Invalid format')}
+            <div class="mt-2 text-sm">
+              <p>There was a problem with the login request format. Please try:</p>
+              <ul class="list-disc list-inside ml-2 my-2">
+                <li>Checking your username/email format</li>
+                <li>Using only alphanumeric characters in your password</li>
+                <li>Clearing your browser cache and cookies</li>
+              </ul>
+            </div>
+          {/if}
         </div>
       {/if}
 
-      <button type="submit" disabled={isSubmitting}>
+      <button type="submit" class="btn variant-filled-primary w-full" disabled={isSubmitting}>
         {isSubmitting ? 'Logging in...' : 'Login'}
       </button>
       
-      <div class="registration-options">
-        <p>Don't have an account?</p>
-        <div class="registration-buttons">
-          <a href="/register" class="register-button family">
+      <div class="card-footer border-t border-surface-200/30 pt-4 mt-4">
+        <p class="text-center mb-4">Don't have an account?</p>
+        <div class="flex flex-col md:flex-row gap-2 justify-center">
+          <a href="/register" class="btn variant-soft-primary">
             Register as Family Member
           </a>
-          <a href="/funeral-director-registration" class="register-button funeral-director">
+          <a href="/funeral-director-registration" class="btn variant-soft-tertiary">
             Register as Funeral Director
           </a>
         </div>
@@ -170,207 +176,3 @@
     </form>
   {/if}
 </div>
-
-<style>
-  .login-container {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-
-  .form-group {
-    margin-bottom: 15px;
-  }
-
-  label {
-    display: block;
-    margin-bottom: 5px;
-  }
-
-  input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-
-  button {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 100%;
-  }
-
-  button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
-
-  .error-message {
-    color: #f44336;
-    margin: 10px 0;
-    padding: 10px;
-    border-radius: 4px;
-    border-left: 4px solid #f44336;
-    background-color: rgba(244, 67, 54, 0.1);
-    display: flex;
-    align-items: flex-start;
-  }
-  
-  .connection-error {
-    color: #ff9800;
-    border-left-color: #ff9800;
-    background-color: rgba(255, 152, 0, 0.1);
-  }
-  
-  .validation-error {
-    color: #9c27b0;
-    border-left-color: #9c27b0;
-    background-color: rgba(156, 39, 176, 0.1);
-  }
-  
-  .error-icon {
-    font-size: 1.5rem;
-    margin-right: 10px;
-    padding-top: 2px;
-  }
-  
-  .error-content {
-    flex: 1;
-  }
-  
-  .error-details {
-    font-size: 0.9rem;
-    margin-top: 8px;
-    color: #666;
-  }
-  
-  .error-details ul {
-    margin-top: 5px;
-    margin-bottom: 5px;
-    padding-left: 20px;
-  }
-
-  .success-message {
-    color: #4CAF50;
-    margin: 10px 0;
-    padding: 15px;
-    border: 1px solid #4CAF50;
-    border-radius: 4px;
-    text-align: center;
-  }
-  
-  .user-info {
-    background-color: #f8f8f8;
-    border-radius: 4px;
-    padding: 10px;
-    margin-top: 10px;
-    text-align: left;
-  }
-  
-  h2 {
-    margin-top: 0;
-  }
-  
-  /* Loading spinner */
-  .spinner {
-    display: inline-block;
-    width: 1rem;
-    height: 1rem;
-    border: 2px solid rgba(76, 175, 80, 0.3);
-    border-radius: 50%;
-    border-top-color: #4CAF50;
-    animation: spin 0.8s ease infinite;
-    margin-right: 0.5rem;
-    vertical-align: middle;
-  }
-  
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
-  .redirect-message {
-    margin-top: 1rem;
-    font-size: 0.9rem;
-    color: #666;
-  }
-  
-  .role-message {
-    background-color: #fff3cd;
-    border: 1px solid #ffeeba;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 20px;
-    color: #856404;
-  }
-  
-  .role-icon {
-    font-size: 1.2rem;
-    margin-right: 8px;
-    vertical-align: middle;
-  }
-  
-  .role-info {
-    margin-top: 8px;
-    font-size: 0.9rem;
-    color: #666;
-  }
-  /* Registration options */
-  .registration-options {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-    text-align: center;
-  }
-  
-  .registration-options p {
-    margin-bottom: 10px;
-    color: #666;
-  }
-  
-  .registration-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .register-button {
-    padding: 10px 15px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-  
-  .register-button.family {
-    background-color: #e3f2fd;
-    color: #1976d2;
-    border: 1px solid #bbdefb;
-  }
-  
-  .register-button.family:hover {
-    background-color: #bbdefb;
-  }
-  
-  .register-button.funeral-director {
-    background-color: #f3e5f5;
-    color: #9c27b0;
-    border: 1px solid #e1bee7;
-  }
-  
-  .register-button.funeral-director:hover {
-    background-color: #e1bee7;
-  }
-  
-  @media (min-width: 480px) {
-    .registration-buttons {
-      flex-direction: row;
-      justify-content: center;
-    }
-  }
-</style>
