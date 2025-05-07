@@ -14,6 +14,7 @@
   let errorMessage = $state('');
   
   // Function to handle search
+  // Function to handle search
   async function handleSearch() {
     console.log('🔍 Searching for tribute:', lovedOnesFullName);
     if (!lovedOnesFullName.trim()) {
@@ -122,81 +123,86 @@
   console.log("🏠 Home page loaded", { authenticated: data.authenticated });
 </script>
 
-<main>
+<main class="container mx-auto max-w-7xl p-4">
   <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-content">
-      <h1>Preserve Memories, Celebrate Lives</h1>
-      <p class="hero-subtitle">
+  <section class="card p-10 mb-16 text-center variant-soft">
+    <div class="max-w-3xl mx-auto">
+      <h1 class="h1 mb-6">Preserve Memories, Celebrate Lives</h1>
+      <p class="text-xl mb-6">
         Tributestream helps you create beautiful digital memorials to honor and
         remember your loved ones for generations to come.
       </p>
       
       <!-- Search and Create Form -->
-      <div class="tribute-actions">
-        <div class="search-container">
+      <div class="my-8">
+        <div class="flex flex-col gap-4 mb-4">
           <input
             type="text"
             placeholder="Enter your loved one's full name"
             bind:value={lovedOnesFullName}
-            class="name-input"
+            class="input"
           />
-          <div class="button-group">
-            <button class="button primary" onclick={handleSearch}>Search</button>
-            <button class="button secondary" onclick={showForm}>Create</button>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button class="btn variant-filled-primary" on:click={handleSearch}>Search</button>
+            <button class="btn variant-soft-secondary" on:click={showForm}>Create</button>
           </div>
         </div>
         
         {#if errorMessage}
-          <div class="error-message">{errorMessage}</div>
+          <div class="alert variant-filled-error">{errorMessage}</div>
         {/if}
         
         {#if showCreateForm}
-          <div class="create-form">
-            <h3>Create a Tribute</h3>
-            <div class="form-group">
-              <label for="lovedOnesName">Loved One's Full Name</label>
+          <div class="card p-6 mt-6 variant-soft text-left">
+            <h3 class="h3 mb-6 text-center">Create a Tribute</h3>
+            
+            <label class="label mb-4">
+              <span>Loved One's Full Name</span>
               <input
                 type="text"
                 id="lovedOnesName"
                 bind:value={lovedOnesFullName}
                 placeholder="Enter your loved one's full name"
+                class="input"
               />
-            </div>
+            </label>
             
-            <div class="form-group">
-              <label for="usersName">Your Full Name</label>
+            <label class="label mb-4">
+              <span>Your Full Name</span>
               <input
                 type="text"
                 id="usersName"
                 bind:value={usersFullName}
                 placeholder="Enter your full name"
+                class="input"
               />
-            </div>
+            </label>
             
-            <div class="form-group">
-              <label for="usersEmail">Your Email Address</label>
+            <label class="label mb-4">
+              <span>Your Email Address</span>
               <input
                 type="email"
                 id="usersEmail"
                 bind:value={usersEmailAddress}
                 placeholder="Enter your email address"
+                class="input"
               />
-            </div>
+            </label>
             
-            <div class="form-group">
-              <label for="usersPhone">Your Phone Number</label>
+            <label class="label mb-4">
+              <span>Your Phone Number</span>
               <input
                 type="tel"
                 id="usersPhone"
                 bind:value={usersPhoneNumber}
                 placeholder="Enter your phone number"
+                class="input"
               />
-            </div>
+            </label>
             
             <button
-              class="button primary create-button"
-              onclick={createTribute}
+              class="btn variant-filled-primary w-full mt-4"
+              on:click={createTribute}
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Creating...' : 'Create Tribute'}
@@ -205,402 +211,80 @@
         {/if}
       </div>
       
-      <div class="hero-actions">
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
         {#if data.authenticated}
           {#if data.user?.role?.type === 'funeral_director'}
-            <a href="/fd-dashboard" class="button primary">Director Dashboard</a>
-            <a href="/createTribute" class="button secondary">Create New Tribute</a>
+            <a href="/fd-dashboard" class="btn variant-filled-primary">Director Dashboard</a>
+            <a href="/createTribute" class="btn variant-soft-secondary">Create New Tribute</a>
           {:else}
-            <a href="/family-dashboard" class="button primary">Family Dashboard</a>
-            <a href="/tributes" class="button secondary">View Tributes</a>
+            <a href="/family-dashboard" class="btn variant-filled-primary">Family Dashboard</a>
+            <a href="/tributes" class="btn variant-soft-secondary">View Tributes</a>
           {/if}
         {:else}
-          <a href="/login" class="button primary cta">Get Started</a>
-          <a href="/family-registration" class="button secondary family-button">Family Registration</a>
-          <a href="/funeral-director-registration" class="button secondary fd-button">Register as Funeral Director</a>
-          <a href="/about" class="button tertiary">Learn More</a>
+          <a href="/login" class="btn variant-filled-primary text-lg py-4">Get Started</a>
+          <a href="/family-registration" class="btn variant-soft-success">Family Registration</a>
+          <a href="/funeral-director-registration" class="btn variant-soft-tertiary">Register as Funeral Director</a>
+          <a href="/about" class="btn variant-ghost-surface">Learn More</a>
         {/if}
       </div>
     </div>
   </section>
 
   <!-- Features Section -->
-  <section class="features">
-    <h2>Why Choose Tributestream</h2>
+  <section class="py-16 text-center mb-16">
+    <h2 class="h2 mb-12">Why Choose Tributestream</h2>
     
-    <div class="feature-grid">
-      <div class="feature-card">
-        <div class="feature-icon">📝</div>
-        <h3>Easy Creation</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="card p-6 variant-soft transition-transform hover:-translate-y-1 hover:shadow-lg">
+        <div class="text-4xl mb-4">📝</div>
+        <h3 class="h3 mb-4">Easy Creation</h3>
         <p>Simple tools to create meaningful tributes without technical knowledge</p>
       </div>
       
-      <div class="feature-card">
-        <div class="feature-icon">🖼️</div>
-        <h3>Photo Collections</h3>
+      <div class="card p-6 variant-soft transition-transform hover:-translate-y-1 hover:shadow-lg">
+        <div class="text-4xl mb-4">🖼️</div>
+        <h3 class="h3 mb-4">Photo Collections</h3>
         <p>Upload and organize cherished photos with captions and stories</p>
       </div>
       
-      <div class="feature-card">
-        <div class="feature-icon">👪</div>
-        <h3>Family Collaboration</h3>
+      <div class="card p-6 variant-soft transition-transform hover:-translate-y-1 hover:shadow-lg">
+        <div class="text-4xl mb-4">👪</div>
+        <h3 class="h3 mb-4">Family Collaboration</h3>
         <p>Invite family members to contribute their own memories and media</p>
       </div>
       
-      <div class="feature-card">
-        <div class="feature-icon">🔒</div>
-        <h3>Privacy Controls</h3>
+      <div class="card p-6 variant-soft transition-transform hover:-translate-y-1 hover:shadow-lg">
+        <div class="text-4xl mb-4">🔒</div>
+        <h3 class="h3 mb-4">Privacy Controls</h3>
         <p>Choose who can view and contribute to your family's tributes</p>
       </div>
       
-      <div class="feature-card fd-feature">
-        <div class="feature-icon">⚰️</div>
-        <h3>For Funeral Directors</h3>
+      <div class="card p-6 variant-soft-tertiary border border-tertiary-300 transition-transform hover:-translate-y-1 hover:shadow-lg col-span-1 md:col-span-2 lg:col-span-1">
+        <div class="text-4xl mb-4">⚰️</div>
+        <h3 class="h3 mb-4">For Funeral Directors</h3>
         <p>Streamline your services with our dedicated funeral director tools</p>
-        <a href="/funeral-director-registration" class="feature-link">Register Now</a>
+        <a href="/funeral-director-registration" class="anchor">Register Now</a>
       </div>
     </div>
   </section>
 
   <!-- Call to Action Section -->
-  <section class="cta-section">
-    <h2>Ready to Create Your First Tribute?</h2>
-    <p>Join thousands of families preserving their precious memories</p>
+  <section class="card p-10 variant-soft-success text-center mb-16">
+    <h2 class="h2 mb-4">Ready to Create Your First Tribute?</h2>
+    <p class="text-lg mb-8">Join thousands of families preserving their precious memories</p>
     
     {#if !data.authenticated}
-      <div class="cta-buttons">
-        <a href="/login" class="button primary cta">Create Your Account</a>
-        <a href="/family-registration" class="button secondary family-cta">Family Registration</a>
-        <a href="/funeral-director-registration" class="button secondary cta">Funeral Director? Register Here</a>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/login" class="btn variant-filled-primary text-lg py-4">Create Your Account</a>
+        <a href="/family-registration" class="btn variant-soft-success">Family Registration</a>
+        <a href="/funeral-director-registration" class="btn variant-soft-tertiary">Funeral Director? Register Here</a>
       </div>
     {:else if data.user?.role?.type === 'funeral_director'}
-      <a href="/createTribute" class="button primary cta">Start a New Tribute</a>
+      <a href="/createTribute" class="btn variant-filled-primary text-lg py-4">Start a New Tribute</a>
     {:else}
-      <a href="/family-dashboard" class="button primary cta">View Your Tributes</a>
+      <a href="/family-dashboard" class="btn variant-filled-primary text-lg py-4">View Your Tributes</a>
     {/if}
   </section>
 </main>
 
-<style>
-  main {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  /* Hero Section */
-  .hero {
-    padding: 80px 20px;
-    text-align: center;
-    background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9));
-    border-radius: 8px;
-    margin-bottom: 60px;
-  }
-
-  .hero-content {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  h1 {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
-    color: #2c3e50;
-  }
-
-  .hero-subtitle {
-    font-size: 1.4rem;
-    margin-bottom: 1.5rem;
-    color: #555;
-    line-height: 1.6;
-  }
-
-  /* Search and Create Form */
-  .tribute-actions {
-    margin: 2rem 0;
-  }
-
-  .search-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .name-input {
-    padding: 12px 16px;
-    font-size: 1.1rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    width: 100%;
-  }
-
-  .button-group {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-  }
-
-  .create-form {
-    background-color: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-top: 1.5rem;
-    text-align: left;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  .create-form h3 {
-    margin-bottom: 1.5rem;
-    text-align: center;
-    color: #2c3e50;
-  }
-
-  .form-group {
-    margin-bottom: 1rem;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-    color: #555;
-  }
-
-  .form-group input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
-  }
-
-  .create-button {
-    width: 100%;
-    margin-top: 1rem;
-  }
-
-  .error-message {
-    color: #e74c3c;
-    margin: 0.5rem 0;
-    font-weight: bold;
-  }
-
-  .hero-actions {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 30px;
-  }
-
-  /* Features Section */
-  .features {
-    padding: 60px 20px;
-    text-align: center;
-    margin-bottom: 60px;
-  }
-
-  .features h2 {
-    font-size: 2.2rem;
-    margin-bottom: 50px;
-    color: #2c3e50;
-  }
-
-  .feature-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
-    margin: 0 auto;
-  }
-
-  .feature-card {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 30px 20px;
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
-
-  .feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  }
-
-  .feature-icon {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-  }
-
-  .feature-card h3 {
-    font-size: 1.4rem;
-    margin-bottom: 15px;
-    color: #2c3e50;
-  }
-
-  .feature-card p {
-    color: #555;
-    line-height: 1.5;
-  }
-
-  /* CTA Section */
-  .cta-section {
-    background-color: #f1f8e9;
-    padding: 60px 20px;
-    text-align: center;
-    border-radius: 8px;
-    margin-bottom: 60px;
-  }
-
-  .cta-section h2 {
-    font-size: 2rem;
-    margin-bottom: 15px;
-    color: #2c3e50;
-  }
-
-  .cta-section p {
-    font-size: 1.2rem;
-    margin-bottom: 30px;
-    color: #555;
-  }
-  
-  .cta-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-  }
-  
-  @media (min-width: 768px) {
-    .cta-buttons {
-      flex-direction: row;
-      justify-content: center;
-    }
-  }
-  
-  .fd-feature {
-    border: 1px solid #e1bee7;
-    background-color: #faf5fb;
-  }
-  
-  .feature-link {
-    display: inline-block;
-    margin-top: 10px;
-    color: #9c27b0;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  
-  .feature-link:hover {
-    text-decoration: underline;
-  }
-
-  /* Buttons */
-  .button {
-    display: inline-block;
-    padding: 14px 28px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 1.1rem;
-    transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
-  }
-  
-  .button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .primary {
-    background-color: #4CAF50;
-    color: white;
-  }
-  
-  .primary:hover {
-    background-color: #3e8e41;
-  }
-  
-  .secondary {
-    background-color: #f8f8f8;
-    color: #333;
-    border: 1px solid #ddd;
-  }
-  
-  .secondary:hover {
-    background-color: #eaeaea;
-  }
-  
-  .tertiary {
-    background-color: transparent;
-    color: #555;
-    border: 1px solid #ddd;
-  }
-  
-  .tertiary:hover {
-    background-color: #f5f5f5;
-  }
-  
-  .fd-button {
-    background-color: #f3e5f5;
-    color: #9c27b0;
-    border: 1px solid #e1bee7;
-  }
-  
-  .fd-button:hover {
-    background-color: #e1bee7;
-  }
-  
-  .family-button {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
-  }
-  
-  .family-button:hover {
-    background-color: #c8e6c9;
-  }
-  
-  .family-cta {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
-  }
-  
-  .family-cta:hover {
-    background-color: #c8e6c9;
-  }
-
-  .cta {
-    font-size: 1.2rem;
-    padding: 16px 32px;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    h1 {
-      font-size: 2.2rem;
-    }
-    
-    .hero-subtitle {
-      font-size: 1.2rem;
-    }
-    
-    .hero-actions {
-      flex-direction: column;
-      gap: 15px;
-    }
-    
-    .feature-grid {
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-    
-    .button {
-      width: 100%;
-      display: block;
-      text-align: center;
-    }
-    
-    .button-group {
-      flex-direction: column;
-    }
-  }
-</style>
+<!-- No custom styles - using SkeletonUI theme -->
