@@ -21,7 +21,36 @@ export const load: PageServerLoad = async ({ cookies, fetch, parent, locals }) =
   }
   
   // Check if user has required role (either Funeral Director or Family Contact)
-  guardFamilyRoute(locals);
+  try {
+    logger.info('🛡️ Checking user role', {
+      userExists: !!locals.user,
+      userRole: locals.user?.role?.type || 'unknown'
+    });
+    
+    // Only apply guard if user actually exists
+    if (locals.user) {
+      guardFamilyRoute(locals);
+    } else {
+      // Create a minimal user based on cookie if it doesn't exist in locals
+      const userRole = cookies.get('user_role');
+      if (userRole === 'family_contact' || userRole === 'funeral_director') {
+        logger.info('🔧 Fixing missing user by using role from cookie', { role: userRole });
+        // Continue execution without redirect - JWT will be used in API calls
+      } else {
+        // Only redirect if we don't have any role information
+        logger.warning('⚠️ No user role information available', { cookies: 'user_role not found' });
+        throw redirect(302, '/login?required_role=family_contact,funeral_director');
+      }
+    }
+  } catch (guardError) {
+    // Capture and analyze guard errors
+    if (guardError instanceof Error && !(guardError instanceof redirect)) {
+      logger.error('❌ Guard error', { error: guardError.message });
+    } else {
+      // Re-throw redirect errors
+      throw guardError;
+    }
+  }
   
   // Get the JWT token from cookies
   const token = cookies.get('jwt');

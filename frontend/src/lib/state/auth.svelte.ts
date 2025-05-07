@@ -9,9 +9,16 @@ import { goto } from '$app/navigation';
 import { getStrapiUrl } from '$lib/config';
 import { createLogger } from '$lib/logger';
 import { clearTributes } from '$lib/api/tributes.svelte';
+import { browser } from '$app/environment';
 
 // Create a dedicated logger
 const logger = createLogger('AuthState');
+
+// Storage keys for local storage
+const STORAGE_KEYS = {
+  USER: 'tributes_user_data',
+  JWT: 'tributes_jwt'
+};
 
 // User interface
 export interface User {
@@ -36,6 +43,26 @@ export const auth = $state<{
   loading: false,
   error: null
 });
+
+// Initialize auth from local storage on client
+if (browser) {
+  try {
+    const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      auth.user = userData;
+      logger.info("Initialized user data from local storage", {
+        username: userData.username,
+        role: userData.role?.type
+      });
+    }
+  } catch (error) {
+    logger.error("Failed to initialize from local storage", { error });
+    // Clear potentially corrupted data
+    localStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.removeItem(STORAGE_KEYS.JWT);
+  }
+}
 
 // Getter functions for state
 export function getUser(): User | null {
@@ -84,7 +111,7 @@ export async function login(identifier: string, password: string): Promise<boole
   try {
     logger.info("Attempting login", { identifier });
     
-    const response = await fetch(`${getStrapiUrl()}/api/auth/local`, {
+    const response: Response = await fetch(`${getStrapiUrl()}/api/auth/local`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -95,20 +122,33 @@ export async function login(identifier: string, password: string): Promise<boole
       })
     });
     
-    const data = await response.json();
+    const data: any = await response.json();
     
     if (!response.ok) {
       throw new Error(data.error?.message || 'Login failed');
     }
     
     // Set user data
-    auth.user = {
+    const userData = {
       id: data.user.id,
       username: data.user.username,
       email: data.user.email,
       role: data.user.role,
       jwt: data.jwt
     };
+    
+    auth.user = userData;
+    
+    // Cache user data in local storage
+    if (browser) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+        localStorage.setItem(STORAGE_KEYS.JWT, data.jwt);
+        logger.debug("User data cached in local storage");
+      } catch (error) {
+        logger.warning("Failed to cache user data in local storage", { error });
+      }
+    }
     
     logger.success("Login successful", {
       username: auth.user?.username,
@@ -142,7 +182,7 @@ export async function register(userData: {
   try {
     logger.info("Registering new user", { email: userData.email });
     
-    const response = await fetch(`${getStrapiUrl()}/api/auth/local/register`, {
+    const response: Response = await fetch(`${getStrapiUrl()}/api/auth/local/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -150,20 +190,33 @@ export async function register(userData: {
       body: JSON.stringify(userData)
     });
     
-    const data = await response.json();
+    const data: any = await response.json();
     
     if (!response.ok) {
       throw new Error(data.error?.message || 'Registration failed');
     }
     
     // Set user data
-    auth.user = {
+    const userAuthData = {
       id: data.user.id,
       username: data.user.username,
       email: data.user.email,
       role: data.user.role,
       jwt: data.jwt
     };
+    
+    auth.user = userAuthData;
+    
+    // Cache user data in local storage
+    if (browser) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userAuthData));
+        localStorage.setItem(STORAGE_KEYS.JWT, data.jwt);
+        logger.debug("User data cached in local storage");
+      } catch (error) {
+        logger.warning("Failed to cache user data in local storage", { error });
+      }
+    }
     
     logger.success("Registration successful", { username: auth.user?.username });
     return true;
@@ -187,7 +240,7 @@ export async function logout(): Promise<boolean> {
   try {
     logger.info("Logging out user", { username: auth.user?.username });
     
-    const response = await fetch('/api/login', {
+    const response: Response = await fetch('/api/login', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
@@ -203,6 +256,17 @@ export async function logout(): Promise<boolean> {
     
     // Clear other state
     clearTributes();
+    
+    // Clear cached data in local storage
+    if (browser) {
+      try {
+        localStorage.removeItem(STORAGE_KEYS.USER);
+        localStorage.removeItem(STORAGE_KEYS.JWT);
+        logger.debug("User data cleared from local storage");
+      } catch (error) {
+        logger.warning("Failed to clear user data from local storage", { error });
+      }
+    }
     
     logger.success("Logout successful");
     
@@ -231,6 +295,19 @@ export function setUser(userData: User | null): void {
       role: userData.role?.type
     });
     auth.user = userData;
+    
+    // Cache user data in local storage
+    if (browser && userData) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+        if (userData.jwt) {
+          localStorage.setItem(STORAGE_KEYS.JWT, userData.jwt);
+        }
+        logger.debug("User data cached in local storage from server");
+      } catch (error) {
+        logger.warning("Failed to cache user data in local storage", { error });
+      }
+    }
   } else {
     auth.user = null;
   }

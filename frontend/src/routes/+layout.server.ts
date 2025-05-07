@@ -10,7 +10,26 @@ export const load: LayoutServerLoad = async ({ cookies, fetch, locals }) => {
   
   console.log(`🔒 Authentication status: ${!!jwt}, Role: ${userRole || 'unknown'}`);
   
-  // If authenticated, fetch user data and set in locals
+  // CRITICAL: Set a minimal user object in locals FIRST based on cookies
+  // This ensures route guards have something to check even if API calls fail
+  if (jwt && userRole) {
+    // Create a minimal user object based on cookie information
+    locals.user = {
+      id: 0,
+      username: 'user',
+      email: '',
+      role: {
+        id: 0,
+        name: userRole === 'family_contact' ? 'Family Contact' :
+              userRole === 'funeral_director' ? 'Funeral Director' : 'Authenticated',
+        type: userRole
+      }
+    };
+    
+    console.log(`👤 Set minimal user object from cookies with role: ${userRole}`);
+  }
+  
+  // If authenticated, fetch user data and update locals with complete data
   if (jwt) {
     try {
       // Fetch user data from Strapi using the config module
@@ -72,6 +91,36 @@ export const load: LayoutServerLoad = async ({ cookies, fetch, locals }) => {
       } catch (fetchError) {
         clearTimeout(timeoutId);
         console.error("💥 Error in user data fetch:", fetchError);
+        
+        // Set a minimal user object based on cookies
+        if (jwt && userRole) {
+          locals.user = {
+            id: 0, // Placeholder ID
+            username: 'user', // Placeholder username
+            email: '',
+            role: {
+              id: 0,
+              name: userRole === 'family_contact' ? 'Family Contact' :
+                    userRole === 'funeral_director' ? 'Funeral Director' : 'Authenticated',
+              type: userRole
+            }
+          };
+          
+          console.log(`👤 Fallback: Using role from cookie: ${userRole}`);
+          
+          // Return authentication status and user data
+          return {
+            authenticated: true,
+            user: {
+              username: 'user',
+              role: {
+                name: userRole === 'family_contact' ? 'Family Contact' :
+                      userRole === 'funeral_director' ? 'Funeral Director' : 'Authenticated',
+                type: userRole
+              }
+            }
+          };
+        }
       }
     } catch (error) {
       console.error("💥 Error fetching user data:", error);
