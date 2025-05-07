@@ -1,178 +1,188 @@
 <script lang="ts">
-  import { enhance } from '$app/forms';
-  import { page } from '$app/state';
-  import { getRoleDisplayName } from '$lib/auth';
-  import type { ActionData } from './$types';
+  import { authStore } from '$lib/services/auth-service';
+  import { goto } from '$app/navigation';
   
-  // Define props with runes
-  let { form } = $props<{ form: ActionData & { redirectTo?: string; connectionError?: boolean } }>();
+  // Form state
+  let username = '';
+  let password = '';
+  let loading = false;
+  let error: string | null = null;
   
-  // Form state using runes
-  let isSubmitting = $state(false);
-  let retryCount = $state(0);
-  
-  // Derived states
-  let success = $derived(form?.success === true);
-  let userData = $derived(form?.user || null);
-  let redirecting = $state(false);
-  let redirectTo = $derived(form?.redirectTo || '/family-dashboard');
-  let isConnectionError = $derived(form?.connectionError === true);
-  
-  // Check for required role parameter
-  let requiredRoleParam = $derived(page.url.searchParams.get('required_role') || '');
-  let requiredRoles = $derived(
-    requiredRoleParam ? requiredRoleParam.split(',') : []
-  );
-  let formattedRequiredRoles = $derived(
-    requiredRoles.map(role => getRoleDisplayName(role)).join(' or ')
-  );
-  let hasRoleMessage = $derived(!!requiredRoleParam);
-  
-  console.log("🔄 Login form data updated:", form);
-  console.log("🔑 Required role check:", { requiredRoleParam, hasRoleMessage });
-  
-  // Handle successful login with role-based redirect
-  $effect(() => {
-    if (success && !redirecting) {
-      redirecting = true;
-      console.log("🚀 Login successful, redirecting to:", redirectTo);
-      
-      // Small delay to show success message before redirect
-      setTimeout(() => {
-        window.location.href = redirectTo;
-      }, 1000);
+  // Handle form submission
+  async function handleLogin() {
+    if (!username || !password) {
+      error = 'Please enter both username and password';
+      return;
     }
-  });
+    
+    try {
+      loading = true;
+      error = null;
+      
+      const success = await authStore.login(username, password);
+      
+      if (success) {
+        // Redirect to tributes page on successful login
+        goto('/tributes');
+      } else {
+        error = 'Login failed. Please check your credentials.';
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      error = err instanceof Error ? err.message : 'An unexpected error occurred';
+    } finally {
+      loading = false;
+    }
+  }
 </script>
 
-<div class="container h-auto mx-auto max-w-md p-4">
-  <h1 class="h1 mb-4">Login</h1>
-  
-  {#if success}
-    <div class="card variant-filled-success p-4">
-      <h2 class="h2">Login successful! 🎉</h2>
-      {#if userData}
-        <div class="card p-4 variant-soft mt-4">
-          <p>Welcome back, <strong>{userData.username}</strong>!</p>
-          {#if userData.email}
-            <p>Email: {userData.email}</p>
-          {/if}
-        </div>
-      {:else}
-        <p>Welcome back!</p>
-      {/if}
-      <p class="mt-4 text-sm">
-        {#if redirecting}
-          <span class="badge-icon"><i class="fa-solid fa-spinner fa-spin-pulse"></i></span>
-          {#if redirectTo.includes('fd-dashboard')}
-            Redirecting to Funeral Director dashboard...
-          {:else}
-            Redirecting to Family dashboard...
-          {/if}
-        {/if}
-      </p>
-    </div>
-  {:else}
-    {#if hasRoleMessage}
-      <div class="alert variant-filled-warning mb-4">
-        <span class="badge-icon">⚠️</span>
-        <p>
-          You need <strong>{formattedRequiredRoles}</strong> permissions to access the requested page.
-        </p>
-        <p class="text-sm mt-2">
-          Please log in with an account that has the required permissions.
-        </p>
-      </div>
-    {/if}
+<svelte:head>
+  <title>Login | TributeStream</title>
+  <meta name="description" content="Log in to your TributeStream account" />
+</svelte:head>
+
+<div class="login-container">
+  <div class="login-card">
+    <h1>Login</h1>
     
-    <form method="POST" use:enhance={() => {
-      isSubmitting = true;
-      
-      return async ({ result }) => {
-        isSubmitting = false;
-        console.log("🏁 Login process completed", result);
-      };
-    }} class="card p-4 variant-soft space-y-4">
-      <div class="form-group">
-        <label class="label" for="username">
-          <span>Username/Email</span>
-          <input
-            class="input"
-            type="text"
-            id="username"
-            name="username"
-            value={form?.username ?? ''}
-            required
-            autocomplete="username"
-          />
-        </label>
-      </div>
-
-      <div class="form-group">
-        <label class="label" for="password">
-          <span>Password</span>
-          <input
-            class="input"
-            type="password"
-            id="password"
-            name="password"
-            required
-            autocomplete="current-password"
-          />
-        </label>
-      </div>
-
-      {#if form?.error}
-        <div class="alert {isConnectionError ? 'variant-filled-warning' : form.error.includes('Invalid format') ? 'variant-filled-tertiary' : 'variant-filled-error'}">
-          <div class="flex items-center">
-            {#if isConnectionError}
-              <span class="mr-2">🔌</span>
-            {:else if form.error.includes('Invalid format')}
-              <span class="mr-2">⚠️</span>
-            {:else}
-              <span class="mr-2">❌</span>  
-            {/if}
-            <strong>{form.error}</strong>
-          </div>
-          
-          {#if isConnectionError}
-            <div class="mt-2 text-sm">
-              <p>The authentication service is currently unavailable. This could be due to:</p>
-              <ul class="list-disc list-inside ml-2 my-2">
-                <li>Server maintenance</li>
-                <li>Network connectivity issues</li>
-                <li>Temporary service outage</li>
-              </ul>
-              <p>Please try again later or contact support if the problem persists.</p>
-            </div>
-          {:else if form.error.includes('Invalid format')}
-            <div class="mt-2 text-sm">
-              <p>There was a problem with the login request format. Please try:</p>
-              <ul class="list-disc list-inside ml-2 my-2">
-                <li>Checking your username/email format</li>
-                <li>Using only alphanumeric characters in your password</li>
-                <li>Clearing your browser cache and cookies</li>
-              </ul>
-            </div>
-          {/if}
+    <form on:submit|preventDefault={handleLogin}>
+      {#if error}
+        <div class="error-message">
+          {error}
         </div>
       {/if}
-
-      <button type="submit" class="btn variant-filled-primary w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'Logging in...' : 'Login'}
-      </button>
       
-      <div class="card-footer border-t border-surface-200/30 pt-4 mt-4">
-        <p class="text-center mb-4">Don't have an account?</p>
-        <div class="flex flex-col md:flex-row gap-2 justify-center">
-          <a href="/register" class="btn variant-soft-primary">
-            Register as Family Member
-          </a>
-          <a href="/funeral-director-registration" class="btn variant-soft-tertiary">
-            Register as Funeral Director
-          </a>
-        </div>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input 
+          type="text" 
+          id="username" 
+          bind:value={username} 
+          disabled={loading}
+          placeholder="Enter your username"
+          autocomplete="username"
+        />
       </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          bind:value={password} 
+          disabled={loading}
+          placeholder="Enter your password"
+          autocomplete="current-password"
+        />
+      </div>
+      
+      <button type="submit" class="login-button" disabled={loading}>
+        {loading ? 'Logging in...' : 'Login'}
+      </button>
     </form>
-  {/if}
+    
+    <div class="links">
+      <a href="/forgot-password">Forgot password?</a>
+      <a href="/register">Create an account</a>
+    </div>
+  </div>
 </div>
+
+<style>
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background-color: #f5f5f5;
+  }
+  
+  .login-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  h1 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+  
+  .login-button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .login-button:hover {
+    background-color: #3a80d2;
+  }
+  
+  .login-button:disabled {
+    background-color: #a0c0e8;
+    cursor: not-allowed;
+  }
+  
+  .error-message {
+    background-color: #ffebee;
+    color: #e53935;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .links a {
+    color: #4a90e2;
+    text-decoration: none;
+  }
+  
+  .links a:hover {
+    text-decoration: underline;
+  }
+</style>
