@@ -1,25 +1,7 @@
 <script lang="ts">
-  import { superForm } from 'sveltekit-superforms';
-  import { message } from 'sveltekit-superforms/client';
-  import type { SuperValidated } from 'sveltekit-superforms';
+ 
 
-  // Props
-  let { form: formData, onCancel } = $props<{
-    form: SuperValidated<Record<string, unknown>>;
-    onCancel: () => void;
-  }>();
-
-  // Initialize the form
-  const { form, errors, enhance, message: formMessage } = superForm(formData, {
-    resetForm: true,
-    taintedMessage: false,
-    onSubmit: () => {
-      isSubmitting = true;
-    },
-    onResult: ({ result }) => {
-      isSubmitting = false;
-    }
-  });
+ 
 
   // State
   let isSubmitting = $state(false);

@@ -9,5 +9,7 @@
 
 @source '../node_modules/@skeletonlabs/skeleton-svelte/dist';
 @import '../theme001.css';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
 
 @custom-variant dark (&:where(.dark, .dark *));
