@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { getRoleDisplayName } from '$lib/auth';
+  import { getRoleDisplayName } from '$lib/roleAuth';
   
   // Get the required role from the URL query parameter
   let requiredRoleParam = $derived(page.url.searchParams.get('required') || '');

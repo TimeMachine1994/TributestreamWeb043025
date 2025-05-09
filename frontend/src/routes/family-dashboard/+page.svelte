@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
   import type { PageProps } from './$types';
   import { createLogger } from '$lib/logger';
-  import { getRoleDisplayName } from '$lib/auth';
+  import { getRoleDisplayName } from '$lib/roleAuth';
   import Navbar from '$lib/components/Navbar.svelte';
   
   // Import API modules

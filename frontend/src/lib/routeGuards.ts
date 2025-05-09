@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import type { UserRole } from '$lib/auth';
+import type { UserRole } from '$lib/roleAuth';
 import { createLogger } from '$lib/logger';
 
 const logger = createLogger('RouteGuards');
